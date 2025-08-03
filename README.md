@@ -65,3 +65,6 @@ nginx -V 2>&1 | grep -- '--conf-path'
 ```bash
  0 0 * * * /bin/bash /home/your_user/wtb/SetUp/run_generate_papers.sh >> /home/your_user/wtb/logs/generate_papers.log 2>&1
    ```
+
+## 可能的问题
+ECSpython版本过低导致requirements安装失败
