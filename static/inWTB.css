@@ -1,0 +1,125 @@
+#inWTB_Title{
+
+}
+
+#inWTB_Calendar{
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+}
+.calendar-header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+    padding: 0 40px;
+}
+
+.DynamicComponent{
+    text-align: center;
+}
+
+#inWTB_DynamicData {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+    gap: 20px;
+}
+
+#inWTB_Remarks{
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.RemarkHeader{
+    position: relative;
+    top:5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#inWTB_Chapters {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+#ChapterHeader {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  margin-top: 20px;
+  position: relative;
+}
+#ChapterChartsContainer {
+  flex-grow: 1;
+  min-width: 0;
+    padding: 25px;
+  overflow: hidden;
+}
+#ChapterDynamicCharts {
+    color:#000000;
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 编辑错题本弹窗 */
+#PopWND_ManageWTB{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    margin: 0 !important;
+}
+
+/*日历组件*/
+.calendar-weekdays, .calendar-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+}
+.date-text {
+  font-size: 14px;
+  color: black;
+  z-index: 1;
+  position: relative;
+  user-select: none;
+  line-height: 1;
+  display: block;
+}
+.calendar-weekdays{
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #00a573;
+    font-weight: bold;
+}
+
+.calendar-days-grid div {
+    height: 20px;
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  position: relative;
+  user-select: none;
+    border: 3px solid rgba(99, 57, 255, 0);
+}
+
+.calendar-days-grid div.today {
+  border: 3px solid #6339ff;
+  font-weight: bold;
+}
+
+.calendar-days-grid div .review-dot {
+  height: 80%;
+    aspect-ratio: 1/1;
+  border-radius: 10px;
+  position: absolute;
+    bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+    z-index: 0;
+}

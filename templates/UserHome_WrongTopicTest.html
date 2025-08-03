@@ -1,0 +1,344 @@
+  <!-- 错题卷弹窗 -->
+<div class="modal" id="inWTB_WrongTopicTest-modal" style="display:none;">
+    <div id="PopWND_AddWT" class="WTT-container">
+        <div class="popup-header">
+            <h3>每日错题卷</h3>
+        </div>
+
+<!--        主题部分    -->
+        <div class="WTT-body">
+            <!--   浏览错题卷    -->
+            <div id="WTTContainer">
+                <div class="WTT-form-row">
+                    <label class="label-prefix" for="select_PopWND_WTT_Chapter">章节</label>
+                    <select id="select_PopWND_WTT_Chapter">...</select>
+                </div>
+                <div id="WTTGenerate_Row">
+                    <label class="label-prefix" for="WTTGenerate_InputNum">题量</label>
+                    <input type="number" id="WTTGenerate_InputNum" min="0" max="20" step="1" placeholder="5" />
+                    <button id="Btn_GenerateNewWTT" class="btn Hollow_Button" onclick="WTP_Create()">生成题卷</button>
+                </div>
+
+                <div id="WTTListContainer">
+                    <!-- 这里存放往期的错题卷列表 -->
+                </div>
+            </div>
+
+                <div id="WTT_LeftHint">
+                  选择左侧一个错题卷后点击“打开”按钮查看试卷PDF。
+                </div>
+            <!--      错题卷展示      -->
+            <div id="WTTDetail" style="display: none">
+                <p id="WTT_title" class="text_inWTB_BigTitle">错题卷标题</p>
+                <p>点击错题文字部分可进入错题的详情界面。请在完成后填写每个错题的完成情况，只能在当日提交得分。</p>
+                <div id="WTT_TopicList">
+
+                </div>
+            </div>
+        </div>
+
+            <!-- 按钮行 -->
+          <div class="button-wrapper">
+                <div class="button-row">
+                  <button class="btn btn-c" onclick="CancelWTT()">关闭</button>
+                  <button class="btn btn-confirm" onclick="openWrongTopicPaperPDF()">打开错题卷</button>
+                </div>
+          </div>
+
+    </div>
+</div>
+
+
+
+<script>
+    let currentWTPId = null;
+    let currentWTPTitle = "";
+// 打开错题卷PDF的函数
+function openWrongTopicPaperPDF() {
+  if (!currentWTPId) {
+    alert("请先选择一个错题卷");
+    return;
+  }
+  window.open(`/wrong_topic_paper_pdf?wtp_id=${currentWTPId}`, "_blank");
+}
+
+// 新建错题卷
+function WTP_Create(){
+    const chapterSelect = document.getElementById("select_PopWND_WTT_Chapter");
+    const chapterId = chapterSelect.value === "none" ? null : parseInt(chapterSelect.value);
+    const inputElem = document.getElementById("WTTGenerate_InputNum");
+    let inputNum = parseInt(inputElem.value);
+
+    if (isNaN(inputNum)) {
+        inputNum = parseInt(inputElem.placeholder) || 5;
+    }
+
+if (inputNum <= 0) {
+    alert("请输入正确的数量！");
+    return;
+}
+    const payload={
+        wtb_id:currentWTBId,
+        chapter_id:chapterId,
+        topic_num:inputNum,
+        title:"manual"
+    };
+    fetch("/generate_wrong_topic_paper",{method:"POST",
+    headers:{
+        "Content-Type":"application/json"
+    },body:JSON.stringify(payload)})
+        .then(res=>res.json())
+        .then(data=>{
+            if(!data.success){
+                alert("生成失败！"+data.message);
+                return;
+            }
+            loadWrongTopicPaperList(currentWTBId);
+        })
+        .catch(err=>{
+            console.error("生成错题卷失败",err);
+            alert("服务器错误！");
+        });
+}
+
+// 提交错题得分
+function submitScoreRatio(wtb_id,wtp_id=null, topic_id, score_ratio) {
+    if (score_ratio === "" || isNaN(score_ratio)) return;
+
+    fetch("/submit_score_ratio", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            wtb_id:wtb_id,
+            wtp_id: wtp_id,
+            topic_id: topic_id,
+            score_ratio: parseFloat(score_ratio)
+        })
+    }).then(res => res.json())
+      .then(data => {
+          if (!data.success) {
+              console.error("提交失败：", data.message);
+          }
+      })
+      .catch(err => {
+          console.error("请求出错：", err);
+      });
+}
+
+
+// 渲染=================================================================
+// 左侧列表查看错题卷
+function WTP_Open(wtp_id, isTodayFlag){
+    toggleWTTDetail(true);
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const isToday = isTodayFlag;
+    const detailContainer = document.getElementById("WTTDetail");
+    const titleElem = document.getElementById("WTT_title");
+    const topicListContainer = document.getElementById("WTT_TopicList");
+
+    titleElem.textContent = "";
+    topicListContainer.innerHTML = "";
+    detailContainer.style.display = "block";
+
+    fetch(`/get_wrong_topic_paper_detail?wtp_id=${wtp_id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                alert("加载错题卷失败：" + data.message);
+                return;
+            }
+
+            titleElem.textContent = `${data.title} (${data.question_count})`;
+            currentWTPId = wtp_id;
+            currentWTPTitle = data.title;
+
+            if (!data.data || data.data.length === 0) {
+                topicListContainer.innerHTML = "<p>无题目数据</p>";
+                return;
+            }
+
+        data.data.forEach((item, index) => {
+            const btn = document.createElement("button");
+            btn.className = "WTP-wrong-topic-btn";
+            btn.style.display = "flex";
+            btn.style.justifyContent = "space-between";
+            btn.style.alignItems = "center";
+            btn.type = "button";
+
+            // 左边文本，绑定点击打开详情
+            const titleSpan = document.createElement("span");
+            titleSpan.textContent = `${index + 1}. ${item.topic_title}`;
+            titleSpan.style.cursor = "pointer";
+            titleSpan.onclick = () => {
+                openWrongTopicDetail(item.topic_id);
+            };
+            btn.appendChild(titleSpan);
+
+            // 右边操作区
+            const rightControls = document.createElement("div");
+            rightControls.style.display = "flex";
+            rightControls.style.alignItems = "center";
+            rightControls.style.gap = "6px";
+
+            if (isToday) {
+                // 今天的错题卷显示输入框和按钮
+                const inputScore = document.createElement("input");
+                inputScore.type = "number";
+                inputScore.min = "0";
+                inputScore.max = "1";
+                inputScore.step = "0.01";
+                if (item.score_ratio !== undefined && item.score_ratio !== null) {
+                    inputScore.value = item.score_ratio;
+                } else {
+                    inputScore.value = "";
+                    inputScore.placeholder = "得分率";
+                }
+                inputScore.className = "WTP-score-input";
+
+                inputScore.addEventListener("mousedown", e => e.stopPropagation());
+                inputScore.addEventListener("click", e => e.stopPropagation());
+
+                inputScore.addEventListener("blur", e => {
+                    e.stopPropagation();
+                    submitScoreRatio(currentWTBId,currentWTPId, item.topic_id, inputScore.value);
+                });
+                inputScore.addEventListener("change", e => {
+                    e.stopPropagation();
+                    submitScoreRatio(currentWTBId,currentWTPId, item.topic_id, inputScore.value);
+                });
+
+                const btnRight = document.createElement("button");
+                btnRight.id = "WTP-score-btn-right";
+                btnRight.type = "button";
+                btnRight.textContent = "✔";
+                btnRight.title = "做对了";
+                btnRight.className = "btn-small WTP-score-btn";
+                btnRight.onclick = e => {
+                    e.stopPropagation();
+                    inputScore.value = "1";
+                    submitScoreRatio(currentWTBId, currentWTPId, item.topic_id, "1");
+                };
+
+                const btnWrong = document.createElement("button");
+                btnWrong.id = "WTP-score-btn-wrong";
+                btnWrong.type = "button";
+                btnWrong.textContent = "✘";
+                btnWrong.title = "做错了";
+                btnWrong.className = "btn-small WTP-score-btn";
+                btnWrong.onclick = e => {
+                    e.stopPropagation();
+                    inputScore.value = "0";
+                    submitScoreRatio(currentWTBId,currentWTPId, item.topic_id, "0");
+                };
+
+                rightControls.appendChild(inputScore);
+                rightControls.appendChild(btnRight);
+                rightControls.appendChild(btnWrong);
+            } else {
+                // 非今天的错题卷，显示得分率文本
+                const scoreText = document.createElement("span");
+                scoreText.textContent = (item.score_ratio !== undefined && item.score_ratio !== null)
+                                        ? item.score_ratio
+                                        : "-";
+                if (item.score_ratio === undefined || item.score_ratio === null) {
+                    scoreText.style.color = "gray";  // 无数据时灰色
+                } else if (item.score_ratio >= 0.8) {
+                    scoreText.style.color = "green"; // 高分绿色
+                } else if (item.score_ratio >= 0.5) {
+                    scoreText.style.color = "orange"; // 中等橙色
+                } else {
+                    scoreText.style.color = "red";   // 低分红色
+                }
+
+                rightControls.appendChild(scoreText);
+            }
+
+            btn.appendChild(rightControls);
+            topicListContainer.appendChild(btn);
+        });
+        })
+        .catch(err => {
+            alert("请求出错");
+            console.error(err);
+        });
+}
+
+// 弹窗打开时调用
+function checkWTT() {
+  updateChapterDropdown(currentWTBId, 'select_PopWND_WTT_Chapter');
+  document.getElementById("inWTB_WrongTopicTest-modal").style.display = 'block';
+  loadWrongTopicPaperList(currentWTBId);
+}
+//显示提示信息
+function toggleWTTDetail(show) {
+  const detail = document.getElementById("WTTDetail");
+  const hint = document.getElementById("WTT_LeftHint");
+  if (show) {
+    detail.style.display = "block";
+    hint.style.display = "none";
+  } else {
+    detail.style.display = "none";
+    hint.style.display = "block";
+  }
+}
+
+  //     关闭
+function CancelWTT(){
+    toggleWTTDetail(false);
+    document.getElementById("inWTB_WrongTopicTest-modal").style.display='none';
+    renderMainPage(currentWTBId);
+}
+
+// 点击查看错题详情
+function openWrongTopicDetail(topic_id) {
+    window.open(`/wrong_topic_detail_page?wtb_id=${currentWTBId}&topic_id=${topic_id}`, "_blank");
+}
+
+// 渲染错题卷list
+function loadWrongTopicPaperList(wtb_id) {
+  const container = document.getElementById("WTTListContainer");
+  container.innerHTML = `<p style="text-align:center;color:gray;">加载中...</p>`;
+
+  fetch(`/get_wrong_topic_paper_list?wtb_id=${wtb_id}`)
+    .then(res => res.json())
+    .then(data => {
+      container.innerHTML = "";
+      if (!data.success || !data.data || data.data.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:gray;">暂无错题卷</p>`;
+        return;
+      }
+
+      data.data.forEach(paper => {
+        const item = document.createElement("div");
+        item.className = "wrong-topic-paper-item";
+        item.dataset.paperId = paper.id;
+
+        // 判断是否是今天创建的，显示 new 标签
+        const createdDate = new Date(paper.created_at);
+        const now = new Date();
+        const isToday = createdDate.toDateString() === now.toDateString();
+        item.dataset.isToday = isToday ? "1" : "0";
+
+        item.innerHTML = `
+          <span class="paper-title">${paper.title}</span>
+          ${isToday ? '<span class="label-today">new</span>' : ''}
+          <span class="paper-info">(${paper.question_count})</span>
+        `;
+
+    item.addEventListener("click", () => {
+      const isTodayFlag = item.dataset.isToday === "1";
+      WTP_Open(paper.id, isTodayFlag);
+    });
+
+        container.appendChild(item);
+      });
+    })
+    .catch(err => {
+      container.innerHTML = `<p style="color:red;text-align:center;">加载失败</p>`;
+      console.error("获取错题卷失败：", err);
+    });
+}
+//     页面渲染========================================================
+</script>

@@ -1,0 +1,105 @@
+<script>
+// 日历渲染
+// 调用接口加载数据并渲染
+function updateCalendar(date) {
+  currentDate = date;
+  loadCalendarData(currentDate);
+}
+function renderCalendar(dateObj, reviewData) {
+  const year = dateObj.getFullYear();
+  const month = dateObj.getMonth() + 1;
+
+  const calendarDays = document.getElementById('calendar_days');
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+  const startWeekday = (monthStart.getDay() + 6) % 7;
+  const totalDays = monthEnd.getDate();
+
+  calendarDays.innerHTML = '';
+
+  for (let i = 0; i < startWeekday; i++) {
+    const emptyDiv = document.createElement('div');
+    calendarDays.appendChild(emptyDiv);
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dayDiv = document.createElement('div');
+
+    // 包装数字的span，方便控制层级
+    const spanDate = document.createElement('span');
+    spanDate.className = 'date-text';
+    spanDate.textContent = day;
+    dayDiv.appendChild(spanDate);
+
+    const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    const today = new Date();
+
+    const isToday = (today.getFullYear() === year &&
+                     today.getMonth() + 1 === month &&
+                     today.getDate() === day);    if (isToday) dayDiv.classList.add('today');
+
+    const reviewCount = reviewData[dateKey] || 0;
+    if (reviewCount > 0) {
+      const dot = document.createElement('div');
+      dot.className = 'review-dot';
+
+      dot.style.backgroundColor = getColorByReviewCount(reviewCount);
+
+      dayDiv.appendChild(dot);
+    }
+
+    calendarDays.appendChild(dayDiv);
+  }
+
+  document.getElementById('text_inWTB_Calendartime').textContent = `${year}年${month}月`;
+}
+
+function loadCalendarData(dateObj) {
+    const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+    fetch(`/get_monthly_review_stats?wtb_id=${currentWTBId}&date=${dateStr}`)
+        .then(res => {
+            if (!res.ok) throw new Error("获取日历数据失败");
+            return res.json();
+        })
+        .then(resp => {
+            if (!resp.success) throw new Error(resp.message);
+            renderCalendar(dateObj, resp.data);
+        })
+        .catch(err => {
+            console.error("日历加载失败：", err);
+            renderCalendar(dateObj, {}); // 渲染空日历
+        });
+}
+
+function getColorByReviewCount(count) {
+  if (count <= 0) return '#d2d2d2';
+  if (count >= 20) return '#00A573';
+
+  const startColor = hexToRgb('#91cfbc');
+  const endColor = hexToRgb('#007a52');
+
+  // 线性映射count到0~1，count=1~20
+  const factor = (count - 1) / (20 - 1);
+
+  const interpColor = interpolateColor(startColor, endColor, factor);
+  return rgbToHex(interpColor.r, interpColor.g, interpColor.b);
+}
+
+
+// 上个月按钮点击事件
+document.getElementById('icon_inWTB_Calendar_Left').onclick = () => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const prevMonthDate = new Date(year, month - 1, 1);
+  updateCalendar(prevMonthDate);
+};
+
+// 下个月按钮点击事件
+document.getElementById('icon_inWTB_Calendar_Right').onclick = () => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const nextMonthDate = new Date(year, month + 1, 1);
+  updateCalendar(nextMonthDate);
+};
+</script>

@@ -1,0 +1,466 @@
+<!-- 导入官方题目弹窗 -->
+<div class="modal" id="inWTB_ImportOfficial-modal" style="display: none;">
+  <div id="PopWND_ImportOfficial" class="popup-container">
+
+    <div class="popup-header">
+      <h3>导入官方题目</h3>
+    </div>
+
+    <!-- 主体内容区域 -->
+    <div class="popup-body import-official-body">
+
+      <!-- 顶部：预览图区域 -->
+      <div id="official_preview_area" class="official-preview">
+        <div id="official_preview_placeholder" style="color:#999; font-size:14px; user-select:none; text-align:center; padding: 30px 10px;">
+          这里用于预览你选择的题目，选择章节后点击任意题目即可预览<br>请在左下角的列表中选择你要导入的题目来源及章节，并在第二个窗口中勾选你要导入的题目<br>右侧面板的章节代表勾选的错题会导入到当前错题本的哪个章节<br>你也可以批量添加标签和翻转状态
+        </div>
+        <img id="official_preview_img" src="" alt="预览图" style="display:none; max-height: 100%; max-width: 100%; object-fit: contain;">
+      </div>
+
+      <!-- 下方左右结构 -->
+      <div class="bottom-section">
+
+        <!-- 左侧：列表 -->
+        <div class="left-list-group">
+          <div class="list-row">
+            <div id="official_collection_list" class="scrollable-list"></div>
+            <div id="official_topic_list" class="scrollable-list">
+              <div id="official_topic_placeholder" style="color:#999; padding: 10px; user-select:none;">
+                请点击左侧题目集中的章节选择题目<br>题号由裁切脚本自动生成，不一定正确！
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：输入信息 -->
+        <div class="right-info-panel">
+
+          <div class="form-row">
+            <select id="select_ImportOfficial_Chapter"></select>
+          </div>
+
+          <div class="form-row">
+            <div id="tagCheckboxContainer_Import" class="tag-row"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 按钮行 -->
+    <div class="button-wrapper">
+      <div class="button-row">
+        <button class="btn btn-cancel" onclick="close_ImportOfficial()">取消</button>
+        <button class="btn btn-confirm" id="btn_ImportOfficial_Import" onclick="confirmImportOfficial()">确认导入</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!--成功窗口-->
+<div id="importSuccessModal" class="Success_modal" style="display: none;">
+  <div class="Success_modal_popup-container">
+    <div class="popup-header">
+      <h3>导入成功</h3>
+    </div>
+      <p>题目导入成功！你想要继续导入吗？</p>
+    <!-- 按钮行 -->
+    <div class="button-wrapper">
+      <div class="button-row">
+        <button class="btn btn-delete" onclick="onExitImport()">退出导入</button>
+        <button class="btn btn-confirm" onclick="onContinueImport()">继续导入</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentSelectedChapterName = "";
+// 确认导入
+function confirmImportOfficial() {
+  const importBtn = document.getElementById("btn_ImportOfficial_Import");
+  importBtn.disabled = true;
+  importBtn.textContent = "导入中...";
+
+  const wtbId = currentWTBId; // 当前错题本ID
+
+  // 右侧章节下拉框，务必用这里的ID
+  const chapterSelect = document.getElementById("select_ImportOfficial_Chapter");
+  if (!chapterSelect) {
+    alert("未找到章节选择框！");
+    importBtn.disabled = false;
+    importBtn.textContent = "确认导入";
+    return;
+  }
+
+  const selectedChapterValue = chapterSelect.value;
+  const selectedChapterName = chapterSelect.options[chapterSelect.selectedIndex]?.text.trim() || "";
+
+  if (!selectedChapterValue && selectedChapterName !== "*新建对应章节") {
+    alert("请选择导入章节");
+    importBtn.disabled = false;
+    importBtn.textContent = "确认导入";
+    return;
+  }
+
+  // 获取右侧标签勾选
+  const tagContainer = document.getElementById("tagCheckboxContainer_Import");
+  const selectedTags = [];
+  tagContainer.querySelectorAll(".tag-checkbox-item.selected").forEach(div => {
+    const labelId = div.dataset.labelId;
+    if (labelId) selectedTags.push(Number(labelId));
+  });
+
+  // 左侧题目列表
+  const topicList = document.getElementById("official_topic_list");
+  const selectedTopics = [];
+
+  topicList.querySelectorAll(".list-item").forEach(item => {
+    const checkbox = item.querySelector(".topic-checkbox");
+    if (!checkbox || !checkbox.checked) return;
+
+    const filename = item.dataset.filename;
+    const title = item.querySelector(".list-item-label")?.textContent || "";
+    const imgUrl = item.dataset.imgUrl;
+    const scoreStr = item.dataset.score;
+    const score = (scoreStr === "0" || scoreStr === "1") ? Number(scoreStr) : 1;
+
+    if (!filename || !imgUrl) {
+      console.warn("题目缺少文件名或图片url", item);
+      return;
+    }
+
+    selectedTopics.push({
+      filename,
+      title,
+      img_url: imgUrl,
+      score
+    });
+  });
+
+  if (selectedTopics.length === 0) {
+    alert("请至少选择一个题目");
+    importBtn.disabled = false;
+    importBtn.textContent = "确认导入";
+    return;
+  }
+
+  // payload中传入章节ID和值（根据后端需求）
+  const payload = {
+    wtb_id: wtbId,
+    chapter_id: selectedChapterValue,
+    chapter_name: selectedChapterName, // 如果后端需要章节名也传
+    tags: selectedTags,
+    topics: selectedTopics
+  };
+
+  fetch("/import_official_topics", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showImportSuccessModal();
+    } else {
+      alert("导入失败：" + data.message);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("导入请求异常");
+  })
+  .finally(() => {
+    importBtn.disabled = false;
+    importBtn.textContent = "确认导入";
+  });
+}
+
+
+// 显示导入成功窗口
+function showImportSuccessModal() {
+  document.getElementById('importSuccessModal').style.display = 'flex';
+}
+
+  function onContinueImport() {
+    document.getElementById('importSuccessModal').style.display = 'none';
+    switchToImportWND();
+  }
+
+function onExitImport() {
+  // 关闭整个导入窗口
+  document.getElementById('importSuccessModal').style.display = 'none';
+  close_ImportOfficial();
+}
+
+function close_ImportOfficial(){
+    document.getElementById("inWTB_ImportOfficial-modal").style.display = "none";
+    renderMainPage(currentWTBId);
+}
+
+// 章节渲染
+function renderCollectionAndChapters() {
+  const collectionList = document.getElementById("official_collection_list");
+  collectionList.innerHTML = "";
+
+  fetch(`/get_Collection_list`)
+    .then(res => res.json())
+    .then(data => {
+      const subjects = data.collections || [];
+
+      subjects.forEach(subject => {
+        const subjectDiv = document.createElement("div");
+        subjectDiv.className = "subject-item";
+
+        const subjectTitle = document.createElement("div");
+        subjectTitle.className = "subject-title";
+        subjectTitle.textContent = subject.subject_name;
+        subjectTitle.style.cursor = "pointer";
+
+        const bookContainer = document.createElement("div");
+        bookContainer.className = "book-container";
+        bookContainer.style.display = "none";
+        bookContainer.style.marginLeft = "12px";
+
+        subjectTitle.addEventListener("click", () => {
+          const isVisible = bookContainer.style.display === "block";
+          document.querySelectorAll(".book-container").forEach(b => b.style.display = "none");
+          if (!isVisible) {
+            bookContainer.style.display = "block";
+          }
+        });
+
+        (subject.books || []).forEach(book => {
+          const collectionDiv = document.createElement("div");
+          collectionDiv.className = "collection-item";
+
+          const collectionTitle = document.createElement("div");
+          collectionTitle.className = "collection-title";
+          collectionTitle.textContent = book.collection_name;
+          collectionTitle.style.cursor = "pointer";
+
+          const chaptersContainer = document.createElement("div");
+          chaptersContainer.className = "chapters-container";
+          chaptersContainer.style.display = "none";
+          chaptersContainer.style.marginLeft = "12px";
+
+          collectionTitle.addEventListener("click", () => {
+            const isVisible = chaptersContainer.style.display === "block";
+            document.querySelectorAll(".chapters-container").forEach(c => c.style.display = "none");
+            if (!isVisible) {
+              chaptersContainer.style.display = "block";
+            }
+          });
+
+          (book.chapters || []).forEach(chapter => {
+            const chapterDiv = document.createElement("div");
+            chapterDiv.className = "list-item";
+            chapterDiv.textContent = chapter.chapter_name;
+            chapterDiv.style.cursor = "pointer";
+
+          chapterDiv.addEventListener("click", () => {
+            fetchTopicsForChapter(subject.subject_name, book.collection_name, chapter.chapter_name);
+          });
+
+            chaptersContainer.appendChild(chapterDiv);
+          });
+
+          collectionDiv.appendChild(collectionTitle);
+          collectionDiv.appendChild(chaptersContainer);
+          bookContainer.appendChild(collectionDiv);
+        });
+
+        subjectDiv.appendChild(subjectTitle);
+        subjectDiv.appendChild(bookContainer);
+        collectionList.appendChild(subjectDiv);
+      });
+    })
+    .catch(err => {
+      console.error("加载错题集失败:", err);
+    });
+}
+
+
+// 题目列表渲染，顶部增加三个按钮
+function fetchTopicsForChapter(subjectName, collectionName, chapterName) {
+      currentSelectedChapterName = chapterName;
+      const topicList = document.getElementById("official_topic_list");
+      topicList.innerHTML = "";
+
+      // 添加顶部按钮容器
+      const btnContainer = document.createElement("div");
+      btnContainer.style.display = "flex";
+      btnContainer.style.gap = "8px";
+      btnContainer.style.marginBottom = "8px";
+
+      // 全选按钮
+      const btnAll = document.createElement("button");
+      btnAll.textContent = "全选";
+      btnAll.className = "Hollow_Button_Official";
+      btnAll.onclick = () => {
+        const checkboxes = document.querySelectorAll(".topic-checkbox");
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+      };
+
+      // 全错按钮，批量标记所有题目为错
+      const btnWrong = document.createElement("button");
+      btnWrong.textContent = "全错";
+      btnWrong.className = "Hollow_Button_Official";
+
+      // 全对按钮，批量标记所有题目为对
+      const btnRight = document.createElement("button");
+      btnRight.textContent = "全对";
+      btnRight.className = "Hollow_Button_Official";
+
+      // 绑定全错功能
+      btnWrong.onclick = () => {
+        document.querySelectorAll(".list-item").forEach(item => {
+          const btnR = item.querySelector(".btn-correct");
+          const btnW = item.querySelector(".btn-wrong");
+          if (btnR && btnW) {
+            btnR.style.backgroundColor = "#ccc";
+            btnW.style.backgroundColor = "#a42929";
+            item.dataset.score = "0";
+          }
+        });
+      };
+
+      // 绑定全对功能
+      btnRight.onclick = () => {
+        document.querySelectorAll(".list-item").forEach(item => {
+          const btnR = item.querySelector(".btn-correct");
+          const btnW = item.querySelector(".btn-wrong");
+          if (btnR && btnW) {
+            btnR.style.backgroundColor = "#33994e";
+            btnW.style.backgroundColor = "#ccc";
+            item.dataset.score = "1";
+          }
+        });
+      };
+
+      btnContainer.appendChild(btnAll);
+      btnContainer.appendChild(btnWrong);
+      btnContainer.appendChild(btnRight);
+
+      topicList.appendChild(btnContainer);
+
+      fetch(`/get_topics_for_chapter?subject=${encodeURIComponent(subjectName)}&collection=${encodeURIComponent(collectionName)}&chapter=${encodeURIComponent(chapterName)}`)
+        .then(res => res.json())
+        .then(data => {
+          const topics = data.topics || [];
+
+          if (topics.length === 0) {
+            const noDataDiv = document.createElement("div");
+            noDataDiv.style.color = "#999";
+            noDataDiv.style.padding = "10px";
+            noDataDiv.textContent = "该章节暂无题目";
+            topicList.appendChild(noDataDiv);
+            return;
+          }
+
+          topics.forEach(topic => {
+            const topicDiv = document.createElement("div");
+            topicDiv.className = "list-item";
+            topicDiv.dataset.filename = topic.filename;
+            topicDiv.dataset.imgUrl = topic.topic_img_url;
+            topicDiv.dataset.score = "1";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "topic-checkbox";
+
+            const label = document.createElement("span");
+            label.className = "list-item-label";
+            label.textContent = topic.topic_name;
+            label.style.cursor = "pointer";
+            label.onclick = () => {
+              showPreviewImage(topic.topic_img_url);
+            };
+
+            // 按钮组容器，靠右排列
+            const btnGroup = document.createElement("div");
+            btnGroup.className = "btn-group";
+
+            const btnRight = document.createElement("button");
+            btnRight.textContent = "✔";
+            btnRight.className = "btn-correct";
+            btnRight.style.backgroundColor = "#ccc";
+
+            const btnWrong = document.createElement("button");
+            btnWrong.textContent = "✘";
+            btnWrong.className = "btn-wrong";
+            btnWrong.style.backgroundColor = "#ccc";
+
+            btnRight.onclick = () => {
+              btnRight.style.backgroundColor = "#33994e";
+              btnWrong.style.backgroundColor = "#ccc";
+              topicDiv.dataset.score = "1";
+              checkbox.checked = true;
+            };
+
+            btnWrong.onclick = () => {
+              btnWrong.style.backgroundColor = "#a42929";
+              btnRight.style.backgroundColor = "#ccc";
+              topicDiv.dataset.score = "0";
+              checkbox.checked = true;
+            };
+
+            btnGroup.appendChild(btnRight);
+            btnGroup.appendChild(btnWrong);
+
+            topicDiv.appendChild(checkbox);
+            topicDiv.appendChild(label);
+            topicDiv.appendChild(btnGroup);
+
+            topicList.appendChild(topicDiv);
+          });
+        })
+        .catch(err => {
+          console.error("加载题目失败:", err);
+        });
+}
+
+// 显示题目预览图函数
+function showPreviewImage(relativeUrl) {
+  const previewImg = document.getElementById("official_preview_img");
+  if (!relativeUrl) {
+    previewImg.style.display = "none";
+    return;
+  }
+  previewImg.src = "/img/" + relativeUrl;
+  previewImg.style.display = "block";
+  document.getElementById("official_preview_placeholder").style.display = "none";
+}
+
+// 清空题目列表，保留 placeholder（打开界面时调用）
+function clearTopicList() {
+  const topicList = document.getElementById("official_topic_list");
+  topicList.innerHTML = `
+    <div id="official_topic_placeholder" style="color:#999; padding: 10px; user-select:none;">
+      请点击左侧题目集中的章节选择题目<br>题号由裁切脚本自动生成，不一定正确！
+    </div>
+  `;
+}
+
+// 打开导入官方题库界面
+function switchToImportWND() {
+  document.getElementById("inWTB_AddWrongTopic-modal").style.display = "none";
+  document.getElementById("inWTB_ImportOfficial-modal").style.display = "block";
+
+  document.getElementById("official_collection_list").innerHTML = "";
+  document.getElementById("official_topic_list").innerHTML = "";
+  document.getElementById("select_ImportOfficial_Chapter").innerHTML = "";
+  document.getElementById("tagCheckboxContainer_Import").innerHTML = "";
+  document.getElementById("official_preview_img").src = "";
+
+  clearTopicList();
+  renderCollectionAndChapters();
+  renderTagCheckboxes("tagCheckboxContainer_Import");
+  updateChapterDropdown(currentWTBId, "select_ImportOfficial_Chapter");
+}
+</script>

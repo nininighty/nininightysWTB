@@ -1,0 +1,505 @@
+  <!-- 添加错题弹窗 -->
+<div class="modal" id="inWTB_AddWrongTopic-modal" style="display:none;">
+  <div id="PopWND_AddWT" class="popup-container">
+
+    <div class="popup-header">
+      <h3>上传错题</h3>
+    </div>
+
+    <!-- 主体内容区域 -->
+    <div class="popup-body">
+          <!-- 左侧内容 -->
+          <div id="left-panel">
+            <div class="form-row">
+              <label class="label-prefix" for="text_PopWND_AddWT_name">名称</label>
+              <input type="text" id="text_PopWND_AddWT_name" placeholder="请输入名称" />
+            </div>
+
+            <div class="form-row">
+              <label class="label-prefix" for="select_PopWND_AddWT_Chapter">章节</label>
+              <select id="select_PopWND_AddWT_Chapter">...</select>
+            </div>
+
+            <div class="form-row score-flip-row">
+              <label class="label-prefix" for="input_PopWND_AddWT_initialScore">得分率</label>
+              <input type="number" id="input_PopWND_AddWT_initialScore" min="0" max="1" step="0.01" placeholder="0.00（选填）" />
+              <input type="checkbox" id="checkbox_PopWND_AddWT_reversible" />
+              <label for="checkbox_PopWND_AddWT_reversible" class="reversible-label">答案可作为题目<br>如单词默写</label>
+            </div>
+
+            <div class="left-panel-fill">
+              <div class="form-row tag-row-wrapper">
+                <label class="label-prefix" for="tagCheckboxContainer">题类<br>标签</label>
+                <div class="tag-row" id="tagCheckboxContainer"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右侧内容 -->
+          <div id="right-panel">
+            <!-- 题目内容 -->
+            <div class="image-uploader" id="question-uploader">
+              <div class="placeholder">
+                <span style="font-size: 24px;">题干图片（必填）</span><br>
+                <span style="font-size: 16px;">将图片拖至此处或点击这片区域粘贴图片<br>截图快捷键:ctrl+shift+windows<br>你也可以<a href="#" id="upload-link-question">上传图片</a></span>
+              </div>
+              <div class="image-preview"></div>
+              <input type="file" id="file-input-question" accept="image/*" style="display:none" />
+            </div>
+
+            <!-- 答案内容 -->
+            <div class="image-uploader" id="answer-uploader">
+              <div class="placeholder">
+                <span style="font-size: 24px;">答案图片</span><br>
+                <span style="font-size: 16px;">将图片拖至此处或点击这片区域粘贴图片<br>你也可以<a href="#" id="upload-link-answer">上传图片</a></span>
+              </div>
+              <div class="image-preview"></div>
+              <input type="file" id="file-input-answer" accept="image/*" style="display:none" />
+            </div>
+
+            <!-- 讲解链接 -->
+            <div class="form-row explanation-row">
+              <label id="label-prefix_explanation" for="input_explanation_url">讲解链接</label>
+              <input type="text" id="input_explanation_url" placeholder="粘贴讲解链接" />
+            </div>
+          </div>
+    </div>
+
+    <!-- 按钮行 -->
+      <div class="button-wrapper">
+            <div class="button-row">
+              <button class="btn btn-import" onclick="switchToImportWND()">导入本站题目集</button>
+              <button class="btn btn-cancel" onclick="addWT_Cancel()">取消</button>
+              <button class="btn btn-confirm" id="btn_confirm_addWT" onclick="addWT_Confirm()">确认</button>
+            </div>
+      </div>
+  </div>
+</div>
+
+<!--成功窗口-->
+<div id="ADDSuccessModal" class="Success_modal" style="display: none;">
+  <div class="Success_modal_popup-container">
+    <div class="popup-header">
+      <h3>添加成功</h3>
+    </div>
+      <p>题目添加成功！你想要继续添加吗？</p>
+    <!-- 按钮行 -->
+    <div class="button-wrapper">
+      <div class="button-row">
+        <button class="btn btn-delete" onclick="onExitADD()">退出添加</button>
+        <button class="btn btn-confirm" onclick="onContinueADD()">继续添加</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let activeUploaderId = 'question-uploader';  // 默认聚焦题干
+document.getElementById('question-uploader').addEventListener('click', () => {
+  activeUploaderId = 'question-uploader';
+});
+
+document.getElementById('answer-uploader').addEventListener('click', () => {
+  activeUploaderId = 'answer-uploader';
+});
+
+function showADDSuccessModal() {
+  document.getElementById('ADDSuccessModal').style.display = 'flex';
+}
+
+  function onContinueADD() {
+    document.getElementById('ADDSuccessModal').style.display = 'none';
+    addWT_POPWND();
+  }
+
+  function onExitADD() {
+  // 关闭整个导入窗口
+  document.getElementById('ADDSuccessModal').style.display = 'none';
+  addWT_Cancel();
+}
+
+// 添加错题本
+function addWT_Cancel(){
+    // 隐藏弹窗
+    document.getElementById("inWTB_AddWrongTopic-modal").style.display = "none";
+
+    // 清空输入框内容和状态
+    document.getElementById("text_PopWND_AddWT_name").value = "";
+    document.getElementById("text_PopWND_AddWT_name").dataset.userTyped = "false";
+
+    const chapterSelect = document.getElementById("select_PopWND_AddWT_Chapter");
+    if (chapterSelect) chapterSelect.value = "none";
+
+    const scoreInput = document.getElementById("input_PopWND_AddWT_initialScore");
+    if (scoreInput) scoreInput.value = "";
+
+    const reversibleCheckbox = document.getElementById("checkbox_PopWND_AddWT_reversible");
+    if (reversibleCheckbox) reversibleCheckbox.checked = false;
+
+    const explanationInput = document.getElementById("input_explanation_url");
+    if (explanationInput) explanationInput.value = "";
+
+    // 清空标签选中状态
+    const selectedTags = document.querySelectorAll(".tag-checkbox-item.selected");
+    selectedTags.forEach(tag => {
+      tag.classList.remove("selected");
+      const checkbox = tag.querySelector(".tag-checkbox-fake");
+      if (checkbox) checkbox.style.backgroundColor = "transparent";
+      tag.style.backgroundColor = "white";
+    });
+
+    // 清空图片预览和已导入文件
+    ['question-uploader', 'answer-uploader'].forEach(id => {
+      const uploader = document.getElementById(id);
+      if (uploader) {
+        const preview = uploader.querySelector(".image-preview");
+        const placeholder = uploader.querySelector(".placeholder");
+        if (preview) preview.innerHTML = "";
+        if (placeholder) placeholder.style.display = "block";
+      }
+    });
+
+    importedFiles.questionFile = null;
+    importedFiles.answerFile = null;
+
+    // 重置激活上传区
+    activeUploaderId = null;
+    renderMainPage(currentWTBId);
+}
+
+function addWT_Confirm() {
+  const confirmBtn = document.getElementById("btn_confirm_addWT");
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "添加中...";
+
+  const nameInput = document.getElementById("text_PopWND_AddWT_name");
+  const chapterSelect = document.getElementById("select_PopWND_AddWT_Chapter");
+  const scoreInput = document.getElementById("input_PopWND_AddWT_initialScore");
+  const reversibleCheckbox = document.getElementById("checkbox_PopWND_AddWT_reversible");
+  const explanationInput = document.getElementById("input_explanation_url");
+
+  // 同步校验失败时要手动恢复按钮状态
+  if (!importedFiles.questionFile) {
+    alert("必须上传题目图片");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "确认添加";
+    return;
+  }
+
+  const selectedTagIds = Array.from(document.querySelectorAll('.tag-checkbox-item.selected'))
+    .map(div => div.dataset.labelId);
+
+  const name = nameInput.value.trim() || nameInput.placeholder;
+  if (name.includes("《") || name.includes("》")) {
+    alert("不能含有书名号！");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "确认添加";
+    return;
+  }
+
+  const chapterValue = chapterSelect.value === "none" ? null : chapterSelect.value;
+
+  let initScore = parseFloat(scoreInput.value);
+  if (isNaN(initScore)) initScore = null;
+
+  const isFlippable = reversibleCheckbox.checked ? 1 : 0;
+  if (!importedFiles.answerFile && isFlippable) {
+    alert("翻转题必须上传答案图片");
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "确认添加";
+    return;
+  }
+
+  const explanationUrl = explanationInput.value.trim();
+
+  const formData = new FormData();
+  formData.append("title", name);
+  formData.append("wtb_id", currentWTBId);
+  formData.append("chapter_id", chapterValue);
+  if (initScore !== null) formData.append("init_score", initScore);
+  formData.append("is_flippable", isFlippable);
+  formData.append("explanation_url", explanationUrl);
+  formData.append("tag_ids", JSON.stringify(selectedTagIds));
+  if (importedFiles.questionFile) {
+    formData.append("question_file", importedFiles.questionFile);
+  }
+  if (importedFiles.answerFile) {
+    formData.append("answer_file", importedFiles.answerFile);
+  }
+
+  fetch("/add_wrong_topic", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "确认添加";
+
+    if (data.success) {
+      importedFiles.questionFile = null;
+      importedFiles.answerFile = null;
+      showADDSuccessModal();
+    } else {
+      alert("上传失败：" + data.message);
+    }
+  })
+  .catch(err => {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "确认添加";
+    alert("网络或服务器错误");
+    console.error(err);
+  });
+}
+
+// 题目输入
+function setupUploader(uploaderId, fileInputId, uploadLinkId) {
+  const uploader = document.getElementById(uploaderId);
+  const placeholder = uploader.querySelector('.placeholder');
+  const preview = uploader.querySelector('.image-preview');
+  const fileInput = document.getElementById(fileInputId);
+  const uploadLink = document.getElementById(uploadLinkId);
+
+  uploadLink.addEventListener('click', e => {
+    e.preventDefault();
+    activeUploaderId = uploaderId;
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length === 0) return;
+    const file = fileInput.files[0];
+
+    // 保存文件
+    if (uploaderId === 'question-uploader') {
+      importedFiles.questionFile = file;
+    } else if (uploaderId === 'answer-uploader') {
+      importedFiles.answerFile = file;
+    }
+
+    const url = URL.createObjectURL(file);
+    updatePreview(url);
+    fileInput.value = '';
+});
+
+  uploader.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploader.style.borderColor = '#007bff';
+  });
+
+  uploader.addEventListener('dragleave', e => {
+    e.preventDefault();
+    uploader.style.borderColor = '#ccc';
+  });
+
+  uploader.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    uploader.style.borderColor = '#ccc';
+
+    const dt = e.dataTransfer;
+
+    if (dt.files.length > 0) {
+      const file = dt.files[0];
+      if (!file.type.startsWith('image/')) return;
+
+      if (uploaderId === 'question-uploader') {
+        importedFiles.questionFile = file;
+      } else if (uploaderId === 'answer-uploader') {
+        importedFiles.answerFile = file;
+      }
+
+      const url = URL.createObjectURL(file);
+      updatePreview(url);
+      return;
+    }
+
+    const item = dt.items[0];
+    if (item && item.type.startsWith('image/')) {
+      const blob = await item.getAsFile();
+      const url = URL.createObjectURL(blob);
+      updatePreview(url);
+    }
+  });
+let currentObjectURL = null;
+function updatePreview(imgUrl) {
+    if (currentObjectURL) {
+      URL.revokeObjectURL(currentObjectURL);
+    }
+    currentObjectURL = imgUrl;
+    preview.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = imgUrl;
+    preview.appendChild(img);
+    placeholder.style.display = 'none';
+}
+
+uploader.addEventListener('click', () => {
+  activeUploaderId = uploaderId;
+
+  // 设置当前为 active
+  document.getElementById('question-uploader').classList.remove('active');
+  document.getElementById('answer-uploader').classList.remove('active');
+  uploader.classList.add('active');
+});
+
+  function handleFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    if (uploaderId === 'question-uploader') {
+      importedFiles.questionFile = file;
+    } else if (uploaderId === 'answer-uploader') {
+      importedFiles.answerFile = file;
+    }
+    const url = URL.createObjectURL(file);
+    updatePreview(url);
+  }
+
+  return {handleFile};
+}
+
+// 初始化题干和答案上传区域
+window.questionUploaderInstance = setupUploader('question-uploader', 'file-input-question', 'upload-link-question');
+window.answerUploaderInstance = setupUploader('answer-uploader', 'file-input-answer', 'upload-link-answer');
+
+// 监听粘贴事件，给当前激活区域赋值图片
+window.addEventListener('paste', async (e) => {
+  if (!activeUploaderId) return;
+
+  const items = e.clipboardData.items;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (!file) continue;
+
+      // 找到对应上传器实例，调用handleFile
+      const uploader = activeUploaderId === 'question-uploader'
+          ? window.questionUploaderInstance
+          : window.answerUploaderInstance;
+      if (uploader && uploader.handleFile) {
+        uploader.handleFile(file);
+      } else {
+        // 备用，直接调用全局变量 importedFiles 也行
+        if (activeUploaderId === 'question-uploader') {
+          importedFiles.questionFile = file;
+        } else {
+          importedFiles.answerFile = file;
+        }
+      }
+      e.preventDefault();
+      break;
+    }
+  }
+});
+
+
+// 渲染用户题类标签
+function renderTagCheckboxes(ContainerId) {
+    const container = document.getElementById(ContainerId);
+    container.innerHTML = "";
+
+    fetch(`/get_Label_list?wtb_id=${currentWTBId}`)
+      .then(res => res.json())
+      .then(data => {
+          const labels = data.labels || [];
+
+          labels.forEach(label => {
+        const div = document.createElement("div");
+        div.className = "tag-checkbox-item";
+        div.dataset.labelId = label.id;
+
+        const checkbox = document.createElement("span");
+        checkbox.className = "tag-checkbox-fake";
+        checkbox.style.borderColor = label.color;
+        checkbox.style.backgroundColor = "transparent";
+
+        const colorBox = document.createElement("span");
+        colorBox.className = "tag-color-box";
+        colorBox.style.backgroundColor = label.color;
+
+        const labelText = document.createElement("span");
+        labelText.className = "tag-name";
+        labelText.textContent = label.tag_name;
+
+        // 计算淡化色
+        const rgb = hexToRgb(label.color);
+        const lightBg = rgb ? rgbaString(rgb, 0.2) : "transparent";
+
+        div.addEventListener("click", () => {
+          div.classList.toggle("selected");
+          const isSelected = div.classList.contains("selected");
+          checkbox.style.backgroundColor = isSelected ? label.color : "transparent";
+          div.style.backgroundColor = isSelected ? lightBg : "white";
+        });
+
+        div.appendChild(checkbox);
+        div.appendChild(colorBox);
+        div.appendChild(labelText);
+        container.appendChild(div);
+      });
+      })
+      .catch(err => {
+        container.innerHTML = "<p style='color:red;'>标签加载失败</p>";
+        console.error("标签获取失败:", err);
+      });
+}
+
+// 添加错题自动命名
+function updateAutoName() {
+    const titleInput = document.getElementById("text_PopWND_AddWT_name");
+    if (titleInput.dataset.userTyped === "true") return;
+
+    const chapterSelect = document.getElementById("select_PopWND_AddWT_Chapter");
+    const chapterIdRaw = chapterSelect.value;
+    const selectedOption = chapterSelect.options[chapterSelect.selectedIndex];
+    const chapterId = chapterIdRaw === "" ? null : chapterIdRaw;
+    const chapterName = chapterId === null ? "无章节" : selectedOption.textContent.trim();
+
+    fetch(`/get_wrong_topic_count_by_chapter?wtb_id=${currentWTBId}&chapter_id=${chapterId || "none"}`)
+        .then(res => res.json())
+        .then(data => {
+            const count = data.count || 0;
+            const defaultName = `【${currentWTBName}】   ${chapterName} ：(${count + 1})`;
+            titleInput.placeholder = defaultName;
+        })
+        .catch(err => {
+            console.error("获取题目数失败", err);
+        });
+}
+// 监听章节改变后改变系统命名
+document.getElementById("select_PopWND_AddWT_Chapter").addEventListener("change", function () {
+    updateAutoName();
+});
+document.getElementById("text_PopWND_AddWT_name").addEventListener("input", function () {
+    this.dataset.userTyped = "true";
+});
+
+// 更新下拉列表
+function updateChapterDropdown(wtbId, ElementId) {
+  fetch(`/get_chapter_list?wtb_id=${wtbId}`)
+    .then(res => res.json())
+    .then(data => {
+        const chapterSelect = document.getElementById(ElementId);
+        chapterSelect.innerHTML = '';
+
+        // 添加“无章节”选项
+        const noneOption = document.createElement('option');
+        noneOption.value = 'none';
+        if (ElementId ==='select_PopWND_WTT_Chapter'){noneOption.textContent = '*全部章节';}
+        else if(ElementId ==='select_ImportOfficial_Chapter'){noneOption.textContent = '*新建对应章节';noneOption.value = '';}
+        else{noneOption.textContent = '无章节';}
+
+        chapterSelect.appendChild(noneOption);
+        data.forEach(chap => {
+          const option = document.createElement('option');
+          option.value = chap.id;
+          option.textContent = chap.name;
+          chapterSelect.appendChild(option);
+        });
+    })
+    .catch(err => {
+      alert('获取章节失败');
+      console.error(err);
+    });
+}
+</script>

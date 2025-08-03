@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='LoginPage.css') }}" />
+</head>
+
+{% set img_path = url_for('static', filename='images') %}
+<body class="RegisterBox">
+        <div id="LOGOBox">
+            <img id="LOGO1" src="{{ img_path }}/Icon_LOGO.png" alt="网站LOGO1" />
+            <img id="LOGO2" src="{{ img_path }}/Nighty WTB.png" alt="网站LOGO2" />
+        </div>
+
+        <div class="registerWND">
+            <h2>注册账户</h2>
+            使用保存密码哈希值，不会窃取您的密码<br>
+            <form id="register_form" method="POST">
+                <label>昵称：<input type="text" name="nickname" required></label><br>
+                <label>账户：<input type="text" name="username" required></label><br>
+                <label>密码：<input type="password" name="password" required></label><br>
+            </form>
+
+            <div>
+                {% with messages = get_flashed_messages(category_filter=["error"]) %}
+                    {% if messages %}
+                        <ul style="margin-left: 20px;padding: 0;margin-top:0;margin-bottom: 0;">
+                            {% for msg in messages %}
+                                <li style="color:red;">{{ msg }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="button-wrapper">
+                <div class="button-row">
+                        <button type="submit" onclick="Register()">注册</button>
+                </div>
+            </div>
+    </div>
+</body>
+<script>
+    function Register() {
+        const btn = document.querySelector("button[type='submit']");
+        btn.disabled = true;
+        btn.textContent = "提交中...";
+        document.getElementById('register_form').submit();
+    }
+</script>
+
+</html>

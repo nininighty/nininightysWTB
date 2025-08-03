@@ -1,0 +1,126 @@
+/*图标================================================================*/
+/*新建错题本*/
+#icon_createWTB {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+#icon_createWTB img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 编辑wtb 按钮*/
+#icon_wtb_edit {
+  right: 10px;
+  align-items: center;
+}
+
+#icon_wtb_edit img{
+  width: 100%;
+  height: 100%;
+}
+
+/*个人中心 */
+#icon_UserCenter, #icon_UserLogOut {
+  padding: 0;
+    height: 80%;
+}
+#icon_UserCenter img, #icon_UserLogOut img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/*编辑错题本*/
+#icon_inWTB_edit_button{
+    width: 10vw;
+    aspect-ratio: 3/1;
+}
+
+#icon_inWTB_edit_button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#icon_inWTB_Calendar_Left,
+#icon_inWTB_Calendar_Right {
+    width: 30px;
+    height: 30px;
+}
+
+/*动态组件下的按钮*/
+#icon_inWTB_AddWrongTopic,
+#icon_inWTB_DailyReview,
+#text_inWTB_ReviewRate{
+    width: 100%;
+    height: 100%;
+}
+#TotalNumber button.ClickButton img,
+#TodayReview button.ClickButton img,
+#ReviewRate button.ClickButton img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+#icon_inWTB_RefreshRemarks {
+    position: absolute;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+}
+#icon_inWTB_RefreshRemarks img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+#icon_inWTB_ManageChapters{
+    position: absolute;
+    width: 10vw;
+    aspect-ratio: 3/1;
+    right:20px;
+}
+#icon_inWTB_ManageChapters img{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+/* 图像元素 ===========================================================*/
+#User_Avatar{
+  width: 80%;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+#LOGO1 {
+  width: calc((100% - 8px) * 44 / (44 + 196));
+  aspect-ratio: 44 / 54;
+  height: auto;
+  object-fit: contain;
+}
+
+#LOGO2 {
+  width: calc((100% - 8px) * 196 / (44 + 196));
+  aspect-ratio: 196 / 34;
+  height: auto;
+  object-fit: contain;
+}
+
+#LINE1, #LINE2 {
+  position: static; /* 取消绝对定位 */
+  height: 1.5px;
+  width: 100%;
+  background-color: #ccc;
+  margin: 10px 0;
+}

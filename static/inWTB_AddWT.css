@@ -1,0 +1,255 @@
+#PopWND_AddWT.popup-container {
+  width: 900px;
+  height: 600px;
+  padding: 20px 30px;
+  background: #fff;
+  border-radius: 15px;
+  color: #000;
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  font-family: 'MyFont', sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+/* 标题部分 */
+.popup-header {
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+.popup-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* 内容部分改为水平分栏 */
+.popup-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.5fr 1.75fr;
+  gap: 16px;
+  overflow: hidden;
+  padding-top: 15px;
+}
+
+
+
+/* 左侧面板 */
+#left-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.left-panel-fill {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* 右侧面板 */
+#right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 右侧上下两部分各占一半 */
+.content-section {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 使超链接样式与其他文本一致 */
+.placeholder-link {
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* 标签容器 */
+/* 标签左侧拉伸填满空白 */
+.tag-row-wrapper {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+/* 控制滚动容器的最大高度和填满空间 */
+.tag-row-scroll-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  overflow: hidden;
+}
+/* 标签本身支持滚动 */
+.tag-row {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #fafafa;
+  min-height: 0;
+}
+.tag-row > * {
+  margin: 0;
+  align-self: flex-start;
+}
+
+/* 表单行 */
+.form-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  gap: 10px;
+}
+
+/* 标签前缀宽度调整为70px */
+.label-prefix,
+.label-prefix-long{
+  width: 50px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #222;
+  user-select: none;
+  display: inline-block;
+}
+.label-prefix-long {
+  width: 70px;
+}
+.explanation-row {
+  flex-shrink: 0;    /* 固定高度，不压缩 */
+  height: 40px;      /* 或你想要的固定高度 */
+  display: flex;
+  align-items: center;
+}
+#label-prefix_explanation{
+  width: 65px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #222;
+  user-select: none;
+  display: inline-block;
+}
+
+/* 输入框、选择框样式 */
+.form-row input[type="text"],
+.form-row select,
+.form-row input[type="number"] {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* 得分率和翻转题复选框一行 */
+.score-flip-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* 翻转题label */
+.reversible-label {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+  max-width: 120px;
+  white-space: normal;
+}
+
+.score-flip-row input[type="number"] {
+  width: 80px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.score-flip-row input[type="checkbox"] {
+  margin-right: 6px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.score-flip-row label {
+  font-size: 14px;
+  user-select: none;
+}
+
+.image-uploader {
+  cursor: default;
+  flex-grow: 1;
+  min-height: 150px;
+  position: relative;
+  border: 1px dashed #ccc;
+  background: #fafafa;
+  color: #666;
+  font-size: 14px;
+  user-select: none;
+}
+.placeholder {
+  z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #666;
+  pointer-events: auto;
+  text-align: center;
+  width: 80%;
+  user-select: none;
+}
+.placeholder a {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.image-uploader.active {
+  border-color: #007bff;
+  background-color: #f8fbff;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}

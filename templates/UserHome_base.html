@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <title>{% block title %}错题本主页{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='text.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='buttons.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Icons&Pics.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='dialog.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='inWTB.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='inWTB_Label.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='inWTB_AddWT.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='inWTB_AddWT_ImportOffcial.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='inWTB_Chapter.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='WrongTopicTest.css') }}" />
+</head>
+<body>
+{% block body %}
+{% endblock %}
+
+{% block script %}
+{% endblock %}
+</body>
+</html>
+
+<script>
+      window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("WTB_detail_WND").style.visibility = "hidden";
+      document.getElementById("WTB_detail_WND").style.pointerEvents = "none";
+  });
+</script>

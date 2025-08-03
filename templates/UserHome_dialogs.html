@@ -1,0 +1,64 @@
+{% set img_path = url_for('static', filename='images') %}
+<!-- 创建错题本弹窗 -->
+<div id="createModal" class="modal" style="display:none;">
+    <div id="PopWND_CreateWTB">
+        <h3>新建错题本</h3>
+        <label>标题：<input type="text" id="wtbTitle" /></label><br /><br />
+        <button onclick="submitWTB()">创建</button>
+        <button onclick="closeDialog()">取消</button>
+    </div>
+</div>
+
+<!-- 修改错题本弹窗 -->
+<div id="rename-modal" class="modal" style="display:none;">
+    <div class="PopupWND">
+        <h3 id="rename-title">编辑错题本</h3>
+        名称：<input type="text" id="rename-input" placeholder="输入新名称" />
+        <div style="margin-top:10px;">
+            <button onclick="confirmRename()">确定</button>
+            <button onclick="closeRename()">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 删除错题本弹窗 -->
+<div id="delete-modal" class="modal" style="display:none;">
+    <div class="PopupWND">
+        <h3 id="delete-title">确认删除</h3>
+        将会一并删除错题本中的错题、章节、注释等所有内容！<br>
+        <div style="margin-top:10px;">
+            <button onclick="confirmDelete()">确认</button>
+            <button onclick="closeDelete()">取消</button>
+        </div>
+    </div>
+</div>
+
+
+ <script>
+// 校验输入名称是否重复
+function isNameDuplicate(newName, containerSelector, itemClass  ,currentSpan = null) {
+    newName = newName.trim().toLowerCase();
+    if (!newName) return false;
+    const chapters = document.querySelectorAll(`${containerSelector} .${itemClass} span`);
+    for (const span of chapters) {
+        if (currentSpan && span === currentSpan) continue;
+        if (span.textContent.trim().toLowerCase() === newName) {
+            return true;
+        }
+    }
+    return false;}
+// 生成系统名称
+function getAutoUnnamedName({ base, containerSelector, itemClass = 'chapter-item' }) {
+    const items = document.querySelectorAll(`${containerSelector} .${itemClass} span`);
+    let count = 0;
+    const existingNames = new Set();
+    items.forEach(span => {
+        existingNames.add(span.textContent.trim());
+    });
+    let name = base;
+    while (existingNames.has(name)) {
+        count += 1;
+        name = `${base}(${count + 1})`;}
+    return name;
+}
+ </script>

@@ -1,0 +1,154 @@
+<!-- 管理章节弹窗 -->
+<div id="inWTB_ManageChapters-modal" class="modal" style="display:none;">
+    <div id="PopWND_ManageChapters" class="PopupWND">
+        <h3 id="text_PopWND_ManageChapters_title">管理章节</h3>
+        <div id="ChapterInputRow">
+            <input type="text" id="newChapterInput" placeholder="输入章节名" />
+            <button onclick="addChapter_Add()">添加章节</button>
+        </div>
+        <br>
+        <div id="ChapterList" style="max-height: 200px; overflow-y: auto;">
+        </div>
+        <br>
+        <div class="button-row" style="text-align: right; margin-top: 10px;">
+            <button class="btn btn-cancel" onclick="addChapter_Cancel()">取消</button>
+            <button class="btn btn-confirm" onclick="addChapter_Confirm()">确认</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 管理章节=============================================================
+function addChapter_Add(){
+        const chapterList = document.getElementById("ChapterList");
+        if (chapterList.children.length >= MaxChapters) {
+            alert('章节数量已达上限（40个），无法添加更多章节');
+            return;
+        }
+        const input = document.getElementById("newChapterInput");
+        const name = input.value.trim()||getAutoUnnamedName({
+            base: "未命名章节",
+            containerSelector: "#ChapterList",
+            itemClass: "chapter-item"
+        });
+
+        if(getMixedLength(name)>16){
+            alert("章节名称过长！（中文最多8字，英文最多16字）");
+            return;
+        }
+        if (isNameDuplicate(name, "#ChapterList", "chapter-item")) {
+            alert("章节名称重复！");
+            input.focus();
+            return;}
+        input.value = "";
+
+        const emptyMsg = document.getElementById("empty-chapter-msg");
+        if (emptyMsg) emptyMsg.remove();
+
+        const item = document.createElement("div");
+        item.className = "chapter-item";
+        item.dataset.status = "new";
+        item.innerHTML = `
+            <span>${name}</span>
+            <button onclick="renameChapter_Local(this)">重命名</button>
+            <button onclick="deleteChapter_Local(this)">删除</button>
+        `;
+        document.getElementById("ChapterList").appendChild(item);
+     }
+
+function renameChapter_Local(button){
+    const chapterItem = button.parentNode;
+    const chapterId = chapterItem.dataset.chapterId;
+    const isNew = chapterItem.dataset.status === "new";
+    const span = chapterItem.querySelector('span');
+
+    if (chapterItem.querySelector('input')) return;
+
+    const oldSpan = span;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = span.textContent;
+    input.style.flex = '1';
+    chapterItem.replaceChild(input, span);
+
+    input.focus();
+
+    input.addEventListener('blur', () => {
+        const newName = input.value.trim() || getAutoUnnamedName({
+            base: "未命名章节",
+            containerSelector: "#ChapterList",
+            itemClass: "chapter-item"
+        });
+        if (getMixedLength(newName) > 16) {
+            alert("章节名称过长！（中文最多8字，英文最多16字）");
+            input.focus();
+            return;
+        }
+        if (isNameDuplicate(newName, "#ChapterList", "chapter-item", input)) {
+            alert("章节名称重复！");
+            input.focus();
+        return;}
+
+        const newSpan = document.createElement('span');
+        newSpan.textContent = newName;
+        newSpan.style.flex = '1';
+        chapterItem.replaceChild(newSpan, input);
+
+        if (!isNew && chapterId) {
+            renamedChapters[chapterId] = newName;}
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            input.blur();}
+    });
+}
+
+function  deleteChapter_Local(button){
+        const chapterItem = button.parentNode;
+        const chapterId = chapterItem.dataset.chapterId;
+        const isNew = chapterItem.dataset.status === "new";
+        if (!confirm("确定删除该章节吗？")) {
+            return;}
+
+        if (!isNew && chapterId) {
+        deletedChapterIds.push(parseInt(chapterId));}
+        chapterItem.remove();
+}
+function addChapter_Confirm(){
+    const newChap = getNewChapters();
+    const id = currentWTBId;
+
+    fetch('/submit_ChapterEdit',{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({wtb_id: id, newChapters: newChap,
+            deleteChapters:deletedChapterIds, renameChapters:renamedChapters, max_chapters:MaxChapters})
+    }).then(res=>res.json())
+        .then(data=>{
+            if (!data.success) {
+              alert("提交失败:" + data.message);
+            }
+        })
+      .finally(() => {
+        document.getElementById("inWTB_ManageChapters-modal").style.display = 'none';
+        deletedChapterIds = [];
+      });
+}
+function  addChapter_Cancel(){
+        document.getElementById("inWTB_ManageChapters-modal").style.display='none';
+        renderMainPage(currentWTBId);
+}
+function getNewChapters() {
+  const newChapters = [];
+  const chapterItems = document.querySelectorAll('#ChapterList .chapter-item');
+  chapterItems.forEach(item => {
+    if (item.dataset.status === 'new') {
+      const name = item.querySelector('span').textContent.trim();
+      newChapters.push({ name });
+    }
+  });
+  return newChapters;
+}
+</script>

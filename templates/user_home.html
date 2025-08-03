@@ -1,0 +1,71 @@
+{% extends "UserHome_base.html" %}
+
+{% block title %}错题本主页{% endblock %}
+
+{% block body %}
+<div id="container">
+    {% include "UserHome_sidebar.html" %}
+    <div id="main-right-panel">
+        {% include "UserHome_main.html" %}
+        {% include "UserHome_Calendar&Charts.html" %}
+    </div>
+</div>
+{% include "UserHome_dialogs.html" %}
+{% include "UserHome_Chapter.html" %}
+{% include "UserHome_ManageWTB.html" %}
+{% include "UserHome_AddWrongTopic.html" %}
+{% include "UserHome_AddWrongTopic_ImportOfficial.html" %}
+{% include "UserHome_WrongTopicTest.html" %}
+{% endblock %}
+
+{% block script %}
+<script>
+    let currentWTBId = null;
+    let currentDate = new Date();
+    let currentWrongTopicId=null;
+    let currentWrongTopicPaperId=null;
+    let currentWTBName="";
+    let deletedChapterIds = [];
+    let renamedChapters = {};
+    let deletedLabels = [];
+    let changedLabels ={};
+    const MaxChapters=40;
+    const MaxWTB=10;
+    const MaxLabels = 10;
+    let importedFiles = {
+      questionFile: null,
+      answerFile: null
+    };
+    function getMixedLength(str) {
+        let length = 0;
+        for (const ch of str) {
+            length += /[\u4e00-\u9fa5]/.test(ch) ? 2 : 1;
+        }
+        return length;
+    }
+function hexToRgb(hex) {
+      const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+      return m ? {
+        r: parseInt(m[1], 16),
+        g: parseInt(m[2], 16),
+        b: parseInt(m[3], 16)
+      } : null;
+}
+function rgbaString(rgb, alpha) {
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+}
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function interpolateColor(color1, color2, factor) {
+  const result = {};
+  result.r = Math.round(color1.r + factor * (color2.r - color1.r));
+  result.g = Math.round(color1.g + factor * (color2.g - color1.g));
+  result.b = Math.round(color1.b + factor * (color2.b - color1.b));
+  return result;
+}
+function showMain() {
+    document.getElementById("main").style.display = "grid";
+}
+</script>
+{% endblock %}

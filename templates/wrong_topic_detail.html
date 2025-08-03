@@ -1,0 +1,654 @@
+<!-- wrong_topic_detail.html -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>错题本详情</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='text.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='buttons.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='Icons&Pics.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='WrongTopicDetail_List.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='WrongTopicDetail_WND.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='inWTB_Label.css') }}" />
+</head>
+
+
+<body>
+
+  <div id="WTB_detail_Container" class="WTB_Detail_Container">
+    <!-- 右侧：错题详情 -->
+    <div id="WTB_detail_right_container" class="WTB-detail-right-container show-empty">
+      <div id="WTB_detail_content" class="grid-box WTB-detail-content" style="display:none;">
+        <!-- 标题 + 复习标签 -->
+        <div class="WTB-detail-title-row">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div id="inWTB_Detail_Title" class="text_inWTB_BigTitle">标题</div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div>当前准确率：</div>
+            <div id="WTB_detail_accuracy_Now" class="text_inWTB_BigTitle" style="font-size: 16px; color: #00b94e;">100%</div>
+            <button id="WTB_detail_review_status" class="WTB-detail-review-status" disabled>未复习</button>
+          </div>
+        </div>
+
+        <!-- 错题本 - 章节 - 创建时间 -->
+        <div class="WTB-detail-info-row">
+          <div class="WTB-detail-book-chapter">
+            <div id="WTB_detail_wtb_name" class="WTB-detail-wtb-name">错题本</div>
+            <div id="WTB_detail_chapter_name" class="WTB-detail-chapter-name">章节</div>
+          </div>
+          <div id="WTB_detail_create_time" class="WTB-detail-create-time">2025-4-7</div>
+        </div>
+
+        <!-- 标签容器 -->
+        <div id="WTB_detail_tags_container" class="WTB-detail-tags-container"></div>
+
+        <!-- 题干和答案 -->
+        <div class="WTB-detail-middle-section">
+          <div id="WTB_detail_question_img_container" class="WTB-detail-image-container"></div>
+          <div id="WTB_detail_answer_img_container" class="WTB-detail-image-container"></div>
+        </div>
+
+        <!-- 讲解链接 + 可翻转 -->
+        <div class="WTB-detail-explanation-flip-row">
+          <button id="WTB_detail_explanation_btn" class="WTB-detail-explanation-btn">查看讲解</button>
+          <input id="WTB_detail_explanation_btn_input" type="text" placeholder="讲解链接" class="WTB-detail-explanation-input" />
+          <label for="WTB_detail_flippable_checkbox" class="WTB-detail-flippable-label">
+            <input type="checkbox" id="WTB_detail_flippable_checkbox" class="WTB-detail-flippable-checkbox" />
+            可翻转
+          </label>
+        </div>
+
+        <!-- 复习情况 -->
+        <div id="review_dot_area">
+           <div class="WTB-detail-title">复习记录（点击按钮可手动添加）</div>
+          <div id="review_dot_container" class="review-track"></div>
+        </div>
+
+
+        <!-- 备注 -->
+        <div id="WTB_detail_note_container" class="WTB-detail-note-container">
+          <div class="WTB-detail-title">备注</div>
+          <div id="WTB_note_bubble_list" class="WTB-note-bubble-list"></div>
+
+          <textarea id="WTB_detail_note_text" maxlength="300" rows="2" class="WTB-detail-note-text" placeholder="输入备注..."></textarea>
+        </div>
+
+        <!-- 按钮 -->
+        <div class="button-wrapper">
+          <div class="button-row">
+            <button class="btn btn-delete" onclick="editWT_Delete()">删除</button>
+            <button class="btn btn-cancel" onclick="editWT_Cancel()">取消</button>
+            <button class="btn btn-confirm" onclick="editWT_Confirm()">确认</button>
+          </div>
+        </div>
+      </div>
+      <div id="WTB_detail_empty" class="WTB-detail-empty">
+        请点击左侧错题
+      </div>
+    </div>
+
+    <!-- 左侧：错题列表 -->
+    <div id="WTB_detail_list" class="grid-box WTB-detail-list">
+      <h3>错题列表</h3>
+      <div id="WTB_detail_list_content"></div>
+    </div>
+  </div>
+
+<div id="AddReviewLogModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h3>添加复习记录</h3>
+
+    <label>正确率：</label>
+    <input type="number" id="review_accuracy_input" min="0" max="1" placeholder="0~1.0">
+
+    <label>备注：</label>
+    <textarea id="review_remark_input" placeholder="可选备注"></textarea>
+
+        <div class="button-wrapper">
+          <div class="button-row">
+            <button class="btn btn-cancel" onclick="closeReviewLogModal()">取消</button>
+            <button class="btn btn-confirm" onclick="confirmAddReviewLog()">确认</button>
+          </div>
+        </div>
+  </div>
+</div>
+
+
+<script>
+  let currentWrongTopicId = null;
+  let currentWTBId = null;
+window.uploadedQuestionImage = null;
+window.uploadedAnswerImage = null;
+
+// 修改确认提交函数名和实现，改为 editWT_Confirm
+function editWT_Confirm() {
+    if (!currentWrongTopicId) {
+      alert("未选择错题，无法提交修改！");
+      return;
+    }
+
+    const note = document.getElementById("WTB_detail_note_text").value.trim();
+    const explanation_url = document.getElementById("WTB_detail_explanation_btn_input").value.trim();
+    const flippable = document.getElementById("WTB_detail_flippable_checkbox").checked;
+
+    const questionImg = window.uploadedQuestionImage;
+    const answerImg = window.uploadedAnswerImage;
+    const reviewLogs = (window.tempReviewLogs || []).filter(log => log.isNew);
+    const selectedTagDivs = document.querySelectorAll("#WTB_detail_tags_container .tag-checkbox-item.selected");
+    const selectedTagIds = Array.from(selectedTagDivs).map(div => div.dataset.labelId);
+
+    const formData = new FormData();
+    formData.append("wrong_topic_id", currentWrongTopicId);
+    formData.append("tags", JSON.stringify(selectedTagIds));
+    formData.append("note", note);
+    formData.append("explanation_url", explanation_url);
+    formData.append("flippable", flippable);
+    formData.append("review_logs", JSON.stringify(reviewLogs));
+
+    if (questionImg) formData.append("question_image", questionImg);
+    if (answerImg) formData.append("answer_image", answerImg);
+
+
+    fetch("/update_wrong_topic_detail", {
+      method: "POST",
+      body: formData,
+    })
+    .then(res => res.json())
+    .then(resp => {
+      if (resp.success) {
+        alert("修改提交成功！");
+        showTopicDetails(currentWrongTopicId);
+      } else {
+        alert("提交失败：" + resp.message);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("提交异常，请稍后重试");
+    });
+}
+
+
+// 删除、取消改名
+function editWT_Delete() {
+    if (!currentWrongTopicId) {
+      alert("未选择要删除的错题！");
+      return;
+    }
+    if (!confirm("确认删除该错题？")) return;
+
+    fetch(`/deleteWrongTopic?topic_id=${currentWrongTopicId}`)
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          currentWrongTopicId = null;
+          showEmptyDetail();
+          loadWrongTopics(currentWTBId);
+        } else {
+          alert("删除失败！" + resp.message);
+        }
+      })
+      .catch(err => {
+        console.error("删除异常", err);
+        alert("删除异常，请稍后重试");
+      });
+  }
+
+function editWT_Cancel() {
+    if (currentWrongTopicId) {
+      showTopicDetails(currentWrongTopicId);
+    } else {
+      showEmptyDetail();
+    }
+  }
+
+
+    // 新增，加载错题列表数据
+function loadWrongTopics(wtb_id) {
+      if (!wtb_id) return;
+      fetch(`/get_wrong_topics?wtb_id=${wtb_id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.success) {
+            const reversedData = resp.data.slice().reverse();
+            renderWrongTopicManager(reversedData);
+          } else {
+            console.error("加载错题失败:", resp.message);
+          }
+        })
+        .catch(err => {
+          console.error("加载错题异常:", err);
+        });
+    }
+
+    // 渲染错题列表，分章节折叠
+function renderWrongTopicManager(data) {
+      const container = document.getElementById("WTB_detail_list_content");
+      container.innerHTML = "";
+
+      const chaptersMap = new Map();
+      data.forEach(item => {
+        const chapter = item.chapter_name || "未归类章节";
+        if (!chaptersMap.has(chapter)) chaptersMap.set(chapter, []);
+        chaptersMap.get(chapter).push(item);
+      });
+
+      chaptersMap.forEach((topics, chapter_title) => {
+        const chapterBlock = document.createElement("div");
+        chapterBlock.className = "chapter-block";
+
+        const header = document.createElement("div");
+        header.className = "chapter-header";
+        header.style.cursor = "default";
+        header.innerHTML = `
+          <span class="expand-toggle" style="cursor: pointer;">▶</span>
+          <span class="chapter-title" style="user-select:none;">${chapter_title}</span>
+        `;
+        chapterBlock.appendChild(header);
+
+        const topicList = document.createElement("ul");
+        topicList.className = "topic-list";
+        topicList.style.display = "none";
+        topicList.style.listStyle = "none";
+        topicList.style.paddingLeft = "20px";
+
+        topics.forEach(topic => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.className = "topic-item-btn";
+          btn.textContent = topic.title;
+          btn.style.cursor = "pointer";
+          btn.dataset.id = topic.id;  // 这里 topic.id 是错题id
+          btn.id = `wrongTopicBtn_${topic.id}`;
+          btn.onclick = () => {
+            currentWrongTopicId = topic.id;
+            showTopicDetails(topic.id);
+          };
+          li.appendChild(btn);
+          topicList.appendChild(li);
+        });
+
+        chapterBlock.appendChild(topicList);
+        container.appendChild(chapterBlock);
+
+        header.querySelector(".expand-toggle").addEventListener("click", () => {
+          const expanded = topicList.style.display === "block";
+          topicList.style.display = expanded ? "none" : "block";
+          header.querySelector(".expand-toggle").textContent = expanded ? "▶" : "▼";
+        });
+      });
+    }
+
+    // 显示错题详情区内容
+function showDetailContent() {
+      document.getElementById("WTB_detail_right_container").classList.remove("show-empty");
+      document.getElementById("WTB_detail_content").style.display = "block";
+      document.getElementById("WTB_detail_empty").style.display = "none";
+    }
+
+function showEmptyDetail() {
+      document.getElementById("WTB_detail_right_container").classList.add("show-empty");
+      document.getElementById("WTB_detail_content").style.display = "none";
+      document.getElementById("WTB_detail_empty").style.display = "block";
+    }
+
+// 加载错题详情
+function showTopicDetails(topicId) {
+      showDetailContent();
+      fetch(`/get_wrong_topic_detail?topic_id=${topicId}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (!resp.success) {
+            alert("加载错题详情失败：" + resp.message);
+            return;
+          }
+          const data = resp.data;
+          window.uploadedQuestionImage = null;
+          window.uploadedAnswerImage = null;
+          document.getElementById("WTB_detail_accuracy_Now").textContent=  `${Math.round((data.current_correct_rate || 0) * 100)}%`;
+          document.getElementById("inWTB_Detail_Title").textContent = data.title || "";
+          document.getElementById("WTB_detail_note_text").value = "";
+          
+          const reviewBtn = document.getElementById("WTB_detail_review_status");
+          reviewBtn.textContent = data.review_status || "未复习";
+          if (data.review_status === "已复习") {
+            reviewBtn.classList.add("done");
+          } else {
+            reviewBtn.classList.remove("done");
+          }
+
+          document.getElementById("WTB_detail_review_status").disabled = false;
+
+          document.getElementById("WTB_detail_wtb_name").textContent = "错题本：" + (data.wtb_name || "");
+          document.getElementById("WTB_detail_chapter_name").textContent = "章节：" + (data.chapter_name || "");
+          document.getElementById("WTB_detail_create_time").textContent = data.created_at || "";
+
+          renderDetailTags(data.tags || [], currentWTBId);
+          showReviewNotes(topicId)
+          setImageOrUpload("WTB_detail_question_img_container", data.question_img_url);
+          setImageOrUpload("WTB_detail_answer_img_container", data.answer_img_url);
+
+const noteList = document.getElementById("WTB_note_bubble_list");
+noteList.innerHTML = "";
+
+(data.notes || []).forEach(note => {
+  const bubble = document.createElement("div");
+  bubble.className = "note-bubble";
+  bubble.innerHTML = `
+    <div>${note.note_text}</div>
+    <div class="note-meta">${note.created_at || ""}</div>
+    <button class="note-delete" onclick="deleteNote(${note.id})">删除</button>
+  `;
+  noteList.appendChild(bubble);
+});
+
+          document.getElementById("WTB_detail_explanation_btn_input").value = data.explanation_url || "";
+          document.getElementById("WTB_detail_flippable_checkbox").checked = !!data.flippable;
+        })
+        .catch(err => {
+          console.error(err);
+          alert("加载错题详情异常");
+        });
+    }
+
+
+// 渲染标签
+function renderDetailTags(selectedTags, wtbId) {
+  const container = document.getElementById("WTB_detail_tags_container");
+  container.innerHTML = "";
+
+  fetch(`/get_Label_list?wtb_id=${wtbId}`)
+    .then(res => res.json())
+    .then(data => {
+      const labels = data.labels || [];
+      labels.forEach(label => {
+        const div = document.createElement("div");
+        div.className = "tag-checkbox-item";
+        div.dataset.labelId = label.id;
+
+        const checkbox = document.createElement("span");
+        checkbox.className = "tag-checkbox-fake";
+        checkbox.style.borderColor = label.color;
+        checkbox.style.backgroundColor = "transparent";
+
+        const colorBox = document.createElement("span");
+        colorBox.className = "tag-color-box";
+        colorBox.style.backgroundColor = label.color;
+
+        const labelText = document.createElement("span");
+        labelText.className = "tag-name";
+        labelText.textContent = label.tag_name;
+
+        const rgb = hexToRgb(label.color);
+        const lightBg = rgb ? rgbaString(rgb, 0.2) : "transparent";
+        const isSelected = selectedTags.includes(label.id.toString());
+        if (isSelected) {
+          checkbox.style.backgroundColor = label.color;
+          div.style.backgroundColor = lightBg;
+          div.classList.add("selected");
+        }
+
+        div.addEventListener("click", () => {
+          div.classList.toggle("selected");
+          const selected = div.classList.contains("selected");
+          checkbox.style.backgroundColor = selected ? label.color : "transparent";
+          div.style.backgroundColor = selected ? lightBg : "white";
+        });
+
+        div.appendChild(checkbox);
+        div.appendChild(colorBox);
+        div.appendChild(labelText);
+        container.appendChild(div);
+      });
+
+      if (labels.length === 0) container.innerHTML = "&nbsp;";
+    })
+    .catch(err => {
+      console.error("标签加载失败：", err);
+      container.innerHTML = "<p style='color:red;'>标签加载失败</p>";
+    });
+}
+
+
+ // 图片上传或显示
+function setImageOrUpload(containerId, imageURL) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  // 判断路径是否包含 "Official"
+  const isOfficial = imageURL && imageURL.includes("Official");
+
+  if (isOfficial) {
+    // 只显示图片，禁用点击
+    const img = document.createElement("img");
+    img.src = imageURL;
+    img.alt = "图片内容";
+    img.className = "WTB-detail-image";
+    img.style.cursor = "default"; // 取消手型指针
+    container.appendChild(img);
+    return;
+  }
+
+  // 非官方路径，允许上传和点击修改
+  let fileInput = container.querySelector("input[type=file]");
+  if (!fileInput) {
+    fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    container.appendChild(fileInput);
+
+    // question image input change
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // 赋值全局变量
+      if (containerId === "WTB_detail_question_img_container") {
+        window.uploadedQuestionImage = file;
+      } else if (containerId === "WTB_detail_answer_img_container") {
+        window.uploadedAnswerImage = file;
+      }
+
+      let img = container.querySelector("img");
+      if (!img) {
+        img = document.createElement("img");
+        img.className = "WTB-detail-image";
+        img.alt = "图片内容";
+        img.style.cursor = "pointer";
+        container.innerHTML = "";
+        container.appendChild(img);
+        img.onclick = () => fileInput.click();
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (imageURL) {
+    const img = document.createElement("img");
+    img.src = imageURL;
+    img.alt = "图片内容";
+    img.className = "WTB-detail-image";
+    img.style.cursor = "pointer";
+    container.appendChild(img);
+    img.onclick = () => fileInput.click();
+  } else {
+    const textDiv = document.createElement("div");
+    textDiv.className = "empty-content";
+    textDiv.textContent = "点击上传图片";
+    textDiv.style.cursor = "pointer";
+    container.appendChild(textDiv);
+    textDiv.onclick = () => fileInput.click();
+  }
+}
+
+
+// 复习记录加载
+function showReviewNotes(topicId) {
+  fetch(`/get_wrong_topic_ReviewLogs?topic_id=${topicId}`)
+    .then(res => res.json())
+    .then(resp => {
+      if (!resp.success) {
+        alert("加载复习记录失败：" + resp.message);
+        return;
+      }
+      // 初始化全局数组，保存后端数据
+      window.tempReviewLogs = resp.data || [];
+      renderReviewNotes(window.tempReviewLogs);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("加载复习记录异常");
+    });
+}
+
+function renderReviewNotes(review_data_list) {
+  const container = document.getElementById("review_dot_container");
+  container.innerHTML = "";
+
+  // 先渲染所有复习点
+  review_data_list.forEach(data => {
+    const dot = document.createElement("div");
+    dot.className = "review-dot";
+
+    const accuracy = data.accuracy || 0;
+    dot.style.backgroundColor = accuracyToHslColor(accuracy);
+
+    dot.dataset.time = data.review_time || "";
+    dot.dataset.accuracy = accuracy;
+    dot.dataset.remark = data.remark || "";
+    dot.dataset.source = data.source || "";
+
+    dot.title = `时间: ${data.review_time || "未知"}\n正确率: ${100*accuracy}%`;
+
+    container.appendChild(dot);
+  });
+
+  // 最后添加“+”按钮
+  const addBtn = document.createElement("button");
+  addBtn.id = "addReviewLogBtn";
+  addBtn.className = "ClickButton circle-plus-btn";
+  addBtn.onclick = addReviewLog;
+  addBtn.textContent = "+";
+  container.appendChild(addBtn);
+}
+
+function addReviewLog() {
+  document.getElementById("AddReviewLogModal").style.display = "block";
+}
+
+function closeReviewLogModal() {
+  document.getElementById("AddReviewLogModal").style.display = "none";
+}
+
+function confirmAddReviewLog() {
+  const accuracy = parseFloat(document.getElementById("review_accuracy_input").value);
+  const remark = document.getElementById("review_remark_input").value.trim();
+
+  if (isNaN(accuracy) || accuracy < 0 || accuracy > 1) {
+    alert("请输入 0-1之间的正确率");
+    return;
+  }
+
+  const newLog = {
+    review_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+    accuracy: accuracy,
+    remark: remark,
+    source: "manual",
+    isNew: true
+  };
+
+  // 初始化数组（防止直接调用 confirmAddReviewLog 而未加载后端数据）
+  if (!window.tempReviewLogs) window.tempReviewLogs = [];
+
+  // 添加到数组末尾（后缀）
+  window.tempReviewLogs.push(newLog);
+
+  closeReviewLogModal();
+
+  // 重新渲染
+  renderReviewNotes(window.tempReviewLogs);
+}
+
+// 删除备注
+function deleteNote(noteId) {
+    if (!confirm("确定要删除这个备注吗？")) {
+      return;
+    }
+
+    fetch(`/delete_note?note_id=${noteId}`, { method: "DELETE" })
+      .then(res => res.json())
+      .then(resp => {
+        if (!resp.success) {
+          alert("删除失败：" + resp.message);
+        } else {
+          showTopicDetails(currentWrongTopicId);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("删除失败，请稍后重试");
+      });
+}
+
+// 查看讲解按钮
+document.getElementById("WTB_detail_explanation_btn").onclick = function () {
+      const url = document.getElementById("WTB_detail_explanation_btn_input").value.trim();
+      if (url) {
+        window.open(url, "_blank");
+      } else {
+        alert("请输入讲解链接");
+      }
+    };
+
+// hex转rgb
+function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+// 准确率转换为色彩
+function accuracyToHslColor(accuracy) {
+      const h = (140 - 0) * accuracy;
+      const s = 70 - (70 - 60) * accuracy;
+      const l = 58 - (58 - 45) * accuracy;
+      return `hsl(${h.toFixed(0)},${s.toFixed(0)}%,${l.toFixed(0)}%)`;
+    }
+// rgba字符串
+function rgbaString(rgb, alpha) {
+      return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+    }
+
+//打开新的界面时的调用
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentWTBId = urlParams.get("wtb_id");
+    currentWrongTopicId = urlParams.get("topic_id");
+    const topicIdFromUrl = urlParams.get("topic_id");
+
+    if (!currentWTBId) {
+      alert("缺少错题本ID");
+      showEmptyDetail();
+      return;
+    }
+
+    loadWrongTopics(currentWTBId);
+
+    if (topicIdFromUrl) {
+      showTopicDetails(topicIdFromUrl);
+    } else {
+      showEmptyDetail();
+    }
+};
+  </script>
+</body>
+</html>

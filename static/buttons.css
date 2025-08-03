@@ -1,0 +1,70 @@
+/* 点击按钮通用类别 */
+.ClickButton{
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.button-wrapper {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+/*空心按钮*/
+.Hollow_Button {
+  padding: 6px 14px;
+  border: 2px solid #00a573;
+  background-color: rgba(255, 255, 255, 0);
+  color: #00a573;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.Hollow_Button:hover {
+  background-color: #d4d4d4;
+}
+
+/* 按钮行 */
+  .button-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+  }
+  .button-row button {
+    padding: 8px 22px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background-color: #ccc;
+    color: #333;
+  }
+  .btn-cancel:hover {
+    background-color: #999;
+  }
+  .btn-confirm {
+    background-color: #009751;
+    color: #fff;
+  }
+  .btn-confirm:hover {
+    background-color: #0b6d3d;
+  }
+    .btn-delete {
+    background-color: #ff6161;
+    color: #ffffff;
+  }
+  .btn-delete:hover {
+    background-color: #8f2323;
+  }
+
+      .btn-import {
+    background-color: #7d5aff;
+    color: #ffffff;
+  }
+  .btn-import:hover {
+    background-color: #aa92ff;
+  }

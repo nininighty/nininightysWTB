@@ -1,0 +1,8 @@
+#保存本地的隐私信息
+*.env
+!.example.env
+# 忽略 WTBs 下的所有内容
+WTBs/*
+# 但不要忽略这两个：
+!WTBs/Official/
+!WTBs/Pic_DefaultAvatar.jpg

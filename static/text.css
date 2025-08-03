@@ -1,0 +1,79 @@
+/*  字体  */
+@font-face {
+  font-family: 'MyFont';
+  src: url('/static/fonts/PingFang.ttc') format('truetype');
+}
+
+/* 文本 =====================================*/
+.text_inWTB_MiniTitle{
+    color: #000000;
+    font-size: 20px;
+    margin:0;
+}
+.text_inWTB_BigTitle{
+    color: #000000;
+    font-size: 26px;
+    margin:0;
+    font-weight: bold;
+}
+.DynamicNumber{
+    color: #00A573;
+    font-size: 60px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.DynamicText{
+    color: #000000;
+    margin:5px;
+}
+
+#text_inWTB_name{
+    padding: 0;
+    height: 0;
+    line-height: 0;
+    margin-left: 25px;
+    font-size: 40px;
+    font-weight: bold;
+    color: #000000
+}
+
+
+#User_NickName{
+  position: absolute;
+  bottom: 20px;
+  left: 100px;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+#User_Name{
+  position: absolute;
+  bottom: 0px;
+  left: 100px;
+  color: #8F8F8F;
+}
+
+#text_wtbs_info{
+  position: absolute;
+  top: 130px;
+  left: 15px;
+    color: #8F8F8F;
+}
+
+#text_inWTB_Calendartime {
+    flex-grow: 1;
+    text-align: center;
+    margin: 0 10px;
+}
+
+#text_inWTB_Remarks {
+    text-align: center;
+}
+
+#text_inWTB_Chapters{
+    position:absolute;
+    font-size: 30px;
+    font-weight: bold;
+    left:20px;
+}

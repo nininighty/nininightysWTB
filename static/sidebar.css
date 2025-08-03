@@ -1,0 +1,180 @@
+/* 左侧栏容器 */
+#sidebar {
+    width: 25vw;
+    min-width: 25vw;
+    height: 100vh;
+    padding: 10px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: 20vh 1fr 15vh;
+    grid-template-areas:
+        "sidebar_top"
+        "sidebar_middle"
+        "sidebar_bottom";
+    gap: 10px 0;
+}
+
+#sidebar-top {
+    grid-area: sidebar_top;
+}
+/*顶部LOGO容器*/
+.logo-container {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 12vh;
+    gap: 8px;
+}
+.sidebar_create_container{
+    height: 8vh;
+    box-sizing: border-box;
+    padding: 10px;
+    flex-direction: column;
+}
+#createRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+#Line1 {
+    flex-grow: 1;
+    height: 2px;
+    padding-left: 0;
+    background-color: #ffffff;
+    margin-right: 20px; /* 与按钮左侧距离 */
+}
+#text_wtbs_info{
+    flex-grow: 1;
+    padding-left: 0;
+    padding-top: 5px;
+    margin:0;
+}
+
+#sidebar-middle {
+    grid-area: sidebar_middle;
+}
+/* 侧边栏中间滚动部分 */
+.wtb-list {
+    height: 100%;
+    overflow-y: auto;
+    min-height: 0;
+}
+/* 错题本列表容器，上方间距 */
+#wtb-list {
+    margin-top: 15px;
+}
+
+
+
+#sidebar-bottom {
+    grid-area: sidebar_bottom;
+}
+/* 侧边栏底部固定部分 */
+.bottom-fixed {
+  padding: 10px;
+  box-sizing: border-box;
+}
+#Line2 {
+  height: 2px;
+  background: rgb(255, 255, 255);
+  margin-bottom: 2px;
+}
+.user-container {
+  display: flex;
+  align-items: center;
+    height: 100%;
+  gap: 4px;
+}
+.avatar-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.user-info {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+.name-section{
+    padding-left: 0;
+    height:50%;
+}
+.info-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.buttonsRow {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+    width: 100%;
+}
+
+
+#avatar_preview{
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 50%;
+  position: relative;
+}
+
+/* 错题本条目，左右布局，间距、圆角、不可选中 */
+.wtb-item {
+    background-color: rgba(255, 255, 255, 0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 15px;
+    cursor: default;
+    user-select: none;
+    border: 1px solid transparent;
+    margin-bottom: 6px;
+}
+.Icon_wtb-label {
+  width: 15px;
+  height: 50px;
+  border-radius: 7px;
+    background-color: #0b6d3d;
+}
+/* 鼠标悬浮错题本条目，高亮背景和边框 */
+.wtb-item:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #7a33ff;
+}
+/* 错题本文字信息部分，占用剩余宽度，鼠标变成手形 */
+.wtb-info {
+    flex-grow: 1;
+    cursor: pointer;
+    padding-left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+/* 弹出浮窗容器 */
+.popup-menu {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    padding: 8px 12px;
+    border-radius: 4px;
+    z-index: 1000;
+    cursor: default;
+    user-select: none;
+    width: 125px;
+    color: #000000;
+}
+/* 浮窗内每条操作，内边距，鼠标为指针 */
+.popup-menu div {
+    padding: 6px 4px;
+    cursor: pointer;
+}
+/* 浮窗内操作鼠标悬浮高亮背景 */
+.popup-menu div:hover {
+    background-color: #f0f0f0;
+}

@@ -1,0 +1,218 @@
+<!-- 错题本编辑弹窗 -->
+<div id="inWTB_ManageWTB-modal" class="modal" style="display:none;">
+    <div id="PopWND_ManageWTB" class="PopupWND">
+        <h3 id="text_PopWND_ManageWTB_title">编辑错题本设置</h3>
+
+<div class="form-row" style="display: flex; align-items: center; gap: 100px;">
+    <div class="form-item" style="display: flex; align-items: center;">
+        <label class="label-prefix-long" for="ManageWTB_themeColor">错题本标签色</label>
+        <input type="color" id="ManageWTB_themeColor" name="themeColor" value="#00A573" style="margin-left: 6px;" />
+    </div>
+
+    <div class="form-item" style="display: flex; align-items: center;">
+        <label class="label-prefix-long" for="ManageWTB_PaperNum_InputNum">每日题量</label>
+        <input type="number" id="ManageWTB_PaperNum_InputNum" min="0" max="20" step="1" placeholder="5" style="margin-left: 6px;" />
+    </div>
+
+</div>
+
+
+        <div id="ManageWTB_Label">
+            <button onclick="ManageWTB_AddLabel()" style="margin-bottom: 5px; font-weight: bold;">添加题类标签</button><br>
+            <div id="WTBLabelList" style="max-height: 200px; overflow-y: auto;">
+                <!-- 标签项动态插入这里 -->
+            </div>
+            <div id="ManageWTB_LabelHint" style="color:#676767; font-size:14px; margin-top: 8px;margin-bottom: 8px;">
+                题类标签用于影响错题被抽取的概率，权重越高在错题卷中出现的概率越大，权重为负数会减少这道题被抽到的概率。
+                多个标签勾选时权重叠加。<br>你可以用标签实现多种功能，如设置权重为1.0的“经典例题”使错题卷中更可能出现经典例题；
+                也可以仅设置标签名而不更改权重来对这章内的题目进行分类，如权重0.0的“计算错误”题。
+            </div>
+        </div>
+        <div class="button-row" style="text-align: right; margin-top: 10px;">
+            <button class="btn btn-cancel" onclick="ManageWTB_Cancel()">取消</button>
+            <button class="btn btn-confirm" onclick="ManageWTB_Confirm()">确认</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+function ManageWTB_AddLabel(){
+    const chapterList = document.getElementById("WTBLabelList");
+    if (chapterList.children.length >= MaxLabels) {
+        alert('标签数量已达上限（10个），无法添加更多标签');
+        return;}
+    const name = getAutoUnnamedName({
+        base: "未命名标签",
+        containerSelector: "#WTBLabelList",
+        itemClass: "label_item"
+        });
+    const emptyMsg = document.getElementById("empty-chapter-msg");
+    if (emptyMsg) emptyMsg.remove();
+
+    const item = document.createElement("div");
+    item.className = "label_item";
+    item.dataset.status = "new";
+    item.innerHTML = `
+        <span>${name}</span>
+        <div>标签色： <input type="color" class="label-color" value="#ff0000" style="margin-left: 10px;"></div>
+        <div style="margin-left:10px;">权重：<input type="number" class="label-weight" min="-1" max="1" step="0.1" value="0" style="width:60px; margin-left:10px;"></div>
+        <button onclick="renameLabel_Local(this)">重命名</button>
+        <button onclick="deleteLabel_Local(this)">删除</button>
+    `;
+    bindLabelChangeListener(item);
+    document.getElementById("WTBLabelList").appendChild(item);
+}
+
+// 取消编辑
+function ManageWTB_Cancel(){
+        document.getElementById("inWTB_ManageWTB-modal").style.display='none';
+}
+
+// 提交编辑结果
+function ManageWTB_Confirm() {
+  const newLabels = getNewLabels();
+
+  // 取每日错题量和主题色
+  const dailyNum = Number(document.getElementById("ManageWTB_PaperNum_InputNum").value) || 0;
+  const themeColor = document.getElementById("ManageWTB_themeColor").value || "#00A573";
+
+  // 先提交标签修改
+  fetch('/submit_LabelEdit', {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      wtb_id: currentWTBId,
+      newLabels,
+      deletedLabels,
+      changedLabels,
+      MaxLabels
+    })
+  }).then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        alert("标签提交失败:" + data.message);
+      } else {
+        // 标签成功后提交其他设置
+        return fetch(`/submit_WTBEdit?wtb_id=${currentWTBId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            daily_num: dailyNum,
+            theme_color: themeColor
+          })
+        }).then(res => res.json())
+          .then(res2 => {
+            if (!res2.success) {
+              alert("错题本设置提交失败:" + res2.message);
+            }
+          });
+      }
+    })
+    .finally(() => {
+      document.getElementById("inWTB_ManageWTB-modal").style.display = 'none';
+      deletedLabels = [];
+      changedLabels = {};
+    });
+}
+
+
+// 读取新建标签
+function getNewLabels() {
+  const newLabels = [];
+  const labelItems = document.querySelectorAll('#WTBLabelList .label_item');
+  labelItems.forEach(item => {
+    if (item.dataset.status === 'new') {
+      const name = item.querySelector('span').textContent.trim();
+      const color = item.querySelector('.label-color').value;
+      const weight = parseFloat(item.querySelector('.label-weight').value);
+      newLabels.push({ name, color, weight });
+    }});
+  return newLabels;
+}
+
+// 本地重命名标签按钮
+function renameLabel_Local(button) {
+    const item = button.parentNode;
+    const labelId = item.dataset.labelId;
+    const isNew = item.dataset.status === "new";
+    const span = item.querySelector('span');
+    const oldName = span.textContent.trim();
+    if (item.querySelector('input[type="text"]')) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = span.textContent.trim();
+    input.style.marginRight = '10px';
+    item.replaceChild(input, span);
+    input.focus();
+
+    input.addEventListener('blur', () => {
+        const newName = input.value.trim() || getAutoUnnamedName({
+            base: "未命名标签",
+            containerSelector: "#WTBLabelList",
+            itemClass: "label_item"
+        });
+        if (getMixedLength(newName) > 16) {
+            alert("标签名称过长！（中文最多8字，英文最多16字）");
+            setTimeout(() => input.focus(), 0);
+            return;}
+        if (isNameDuplicate(newName, "#WTBLabelList", "label_item", span)) {
+            alert("标签名称重复！");
+            setTimeout(() => input.focus(), 0);
+            return;}
+
+        const newSpan = document.createElement('span');
+        newSpan.textContent = newName;
+        item.replaceChild(newSpan, input);
+
+        if (!isNew && labelId && newName !== oldName) {
+        changedLabels[labelId] = { name: newName };}
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+    });
+}
+
+// 本地删除标签按钮
+function deleteLabel_Local(button) {
+    const item = button.parentNode;
+    const labelId = item.dataset.labelId;
+    const isNew = item.dataset.status === 'new';
+    if (!confirm("确定删除该标签吗？")) return;
+    if (!isNew && labelId) {
+        deletedLabels.push(parseInt(labelId));}
+    item.remove();
+}
+
+// 检测标签内容变动
+function bindLabelChangeListener(item) {
+    const colorInput = item.querySelector('.label-color');
+    const weightInput = item.querySelector('.label-weight');
+    const labelId = item.dataset.labelId;
+
+    if (!labelId || item.dataset.status === 'new') return;
+
+    colorInput.addEventListener('input', () => {
+        const color = colorInput.value;
+        if (!changedLabels[labelId]) changedLabels[labelId] = {};
+        changedLabels[labelId].color = color;
+    });
+
+    weightInput.addEventListener('input', () => {
+        const weight = parseFloat(weightInput.value);
+        if (!changedLabels[labelId]) changedLabels[labelId] = {};
+        changedLabels[labelId].weight = weight;
+    });
+
+    weightInput.addEventListener('blur', () => {
+    let val = parseFloat(weightInput.value);
+    if (isNaN(val)) val = 0;
+    if (val > 1) val = 1;
+    if (val < -1) val = -1;
+    weightInput.value = val.toFixed(1);
+});
+}
+</script>

@@ -1,0 +1,322 @@
+{% set img_path = url_for('static', filename='images') %}
+<div id="sidebar">
+    <!-- 侧边栏顶部 -->
+    <div id="sidebar-top">
+        <div class="logo-container">
+            <img id="LOGO1" src="{{ img_path }}/Icon_LOGO.png" alt="网站LOGO1" />
+            <img id="LOGO2" src="{{ img_path }}/Nighty WTB.png" alt="网站LOGO2" />
+        </div>
+        <div class="sidebar_create_container">
+            <div id="createRow">
+                <div class="line-separator" id="Line1"></div>
+                <button id='icon_createWTB' onclick="showCreateDialog()" class="ClickButton">
+                    <img src="{{ img_path }}/Icon_addWTB.png" alt="新建图标" />
+                </button>
+            </div>
+            <p id="text_wtbs_info" class="font_Secondary">我的错题本：{{ wtb_count }}/10</p>
+
+        </div>
+    </div>
+
+    <!-- 侧边栏中部，错题本列表 -->
+    <div id="sidebar-middle" class="wtb-list">
+        <div id="wtb-list">
+                    {% for wtb in wtbs_list %}
+                    <div class="wtb-item" data-theme-color="{{ wtb.label_color }}">
+                        <div class="icon-wtb-label">
+                          <div class="Icon_wtb-label" style="background-color: {{ wtb.label_color }}"></div>
+                        </div>
+                        <div class="wtb-info" onclick="selectWTB({{ wtb.id }})">
+                            {{ wtb.title }}
+                        </div>
+                        <button id='icon_wtb_edit' class='ClickButton' onclick="editWTB({{ wtb.id }}, event)">
+                            <img src="{{ img_path }}/Icon_EditWTB.png" alt="编辑错题本" />
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+    </div>
+
+    <!-- 侧边栏底部，用户信息 -->
+<div id="sidebar-bottom" class="bottom-fixed">
+  <div class="line-separator" id="Line2"></div>
+
+  <div class="user-container">
+    <!-- 左侧头像 -->
+      <div class="avatar-container">
+        <img id="User_Avatar" src="{{ '/img/' + session['avatar_url'] }}" class="user-avatar" />
+      </div>
+
+    <!-- 右侧内容 -->
+    <div class="user-info">
+        <div class="name-section">
+            <p id="User_NickName">{{ session['nickname'] }}</p>
+        </div>
+
+        <div class="info-section">
+            <div class="buttonsRow">
+                <button id='icon_UserCenter' class="ClickButton">
+                <img src="{{ img_path }}/Icon_UserCenter.png" alt="用户中心" onclick="showUserCenter()"/>
+              </button>
+                <button id='icon_UserLogOut' onclick="location.href='{{ url_for('auth.logout') }}'" class="ClickButton">
+                    <img src="{{ img_path }}/Icon_LogOut.png" alt="退出登录" />
+                </button>
+            </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+</div>
+
+<!-- 编辑弹窗 -->
+<div id="edit-popup" class="popup-menu" style="display:none;position:absolute;">
+    <div onclick="loadWTB()">查看错题</div>
+    <div onclick="renameWTB()">重命名错题本</div>
+    <div onclick="deleteWTB()">删除</div>
+</div>
+
+<!--用户个人中心-->
+<div id="inUserInfo-modal" class="modal" style="display: none;">
+  <div id="PopWND_UserInfo" class="PopupWND">
+    <h3 id="text_PopWND_UserInfo_title">个人信息</h3>
+
+    <div class="form-row">
+      <div class="form-item">
+        <label class="label-prefix-long">用户 ID</label>
+        <span id="info_userid">{{ id }}</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-item">
+        <label class="label-prefix-long">昵称</label>
+        <span id="info_nickname">{{ nickname }}</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-item" >
+        <label class="label-prefix-long">头像预览</label><br>
+        <img id="avatar_preview" src="{{ avatar_url or '/static/default_avatar.png' }}" alt="头像" class="avatar-img">
+        <input type="file" id="avatar_input" accept="image/*">
+      </div>
+    </div>
+
+    <!-- 按钮 -->
+    <div class="button-row">
+      <button class="btn btn-confirm" onclick="submitAvatar()">上传头像</button>
+      <button class="btn btn-cancel" onclick="closeUserCenter()">关闭</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+let cachedAvatarFile = null;
+
+function showUserCenter() {
+    fetch("/get_user_info")
+        .then(res => res.json())
+        .then(data => {
+            if(data.success){
+                document.getElementById("info_userid").textContent = data.username;
+                document.getElementById("info_nickname").textContent = data.nickname;
+                let avatarUrl = data.avatar_url || "/static/default_avatar.png";
+                document.getElementById("avatar_preview").src = "/img" + avatarUrl;
+                document.getElementById("inUserInfo-modal").style.display = "block";
+            } else {
+                alert("无法获取用户信息：" + data.message);
+            }
+        });
+}
+
+
+
+function  closeUserCenter(){
+    document.getElementById("inUserInfo-modal").style.display="none";
+}
+
+document.getElementById("avatar_input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  cachedAvatarFile = file;
+
+  // 生成本地预览URL
+  const previewUrl = URL.createObjectURL(file);
+  document.getElementById("avatar_preview").src = previewUrl;
+});
+
+function submitAvatar() {
+  if (!cachedAvatarFile) {
+    alert("请先选择头像文件");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("avatar", cachedAvatarFile);
+
+  fetch("/upload_avatar", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("头像上传成功");
+      // 更新头像预览为服务器路径（如果需要）
+      document.getElementById("avatar_preview").src = data.avatar_url;
+    } else {
+      alert("上传失败：" + data.message);
+    }
+  });
+}
+
+//  选择错题本
+function selectWTB(id) {
+    currentWTBId = id;
+    showMain();
+    renderMainPage(id); // 统一调用渲染函数
+    const chapterSelect = document.getElementById("select_PopWND_AddWT_Chapter");
+    chapterSelect.value = "";
+}
+
+// 创建新的错题本
+function showCreateDialog() {
+        document.getElementById("createModal").style.display = "block";
+}
+function closeDialog() {
+        document.getElementById("createModal").style.display = "none";
+}
+function submitWTB() {
+        const title = document.getElementById("wtbTitle").value.trim();
+        if (!title) {
+            alert("必须填写标题！");
+            return;
+        }
+        if(getMixedLength(title)>16){
+            alert("错题本名称过长！（中文最多8字，英文最多16字）");
+            return;
+        }
+        fetch("/create_wtb", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert("创建失败：" + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("请求错误:", error);
+            alert("请求失败，请重试");
+        });
+        closeDialog();
+    }
+
+
+
+//     编辑弹窗下的操作=================================================================
+//  编辑错题本按钮
+function editWTB(id, event) {
+        event.stopPropagation();
+        const popup = document.getElementById("edit-popup");
+         const editBtn = event.currentTarget;
+        const item = editBtn.closest(".wtb-item");  // 找到对应的错题本容器
+        const title = item.querySelector(".wtb-info").innerText.split("\n")[0].trim();
+        popup.style.left = (event.pageX + 10) + "px";
+        popup.style.top = (event.pageY + 10) + "px";
+
+        popup.style.display = "block";
+        popup.dataset.wtbID = id;
+        popup.dataset.wtbTitle = title
+    }
+document.addEventListener("click", function () {
+        document.getElementById("edit-popup").style.display = "none";
+    });
+document.getElementById("edit-popup").addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+//      弹窗重命名
+function  renameWTB(){
+        const id = document.getElementById("edit-popup").dataset.wtbID;
+        const renameModal = document.getElementById("rename-modal");
+        const title = document.getElementById("edit-popup").dataset.wtbTitle;
+        document.getElementById("rename-title").innerText = `重命名 "${title}"`;
+        document.getElementById("rename-input").placeholder = title;
+        renameModal.dataset.wtbID=id;
+        renameModal.style.display="block";
+    }
+function confirmRename(){
+        const id = document.getElementById("rename-modal").dataset.wtbID;
+        let newTitle = document.getElementById("rename-input").value.trim();
+        if (!newTitle) {
+                newTitle = document.getElementById("edit-popup").dataset.wtbTitle;
+        }
+        if(getMixedLength(newTitle)>16){
+            alert("错题本名称过长！（中文最多8字，英文最多16字）");
+            return;
+        }
+        fetch("/rename_wtb",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({id,new_title:newTitle})
+        }).then(res=>res.json())
+            .then(data=>{
+                if(data.success){
+                    location.reload();
+                }else{
+                    alert("重命名失败:"+data.message);
+                }
+            })
+        .finally(() => closeDelete())
+    }
+function closeRename(){
+        document.getElementById("rename-input").value="";
+        document.getElementById("rename-modal").style.display="none";
+    }
+
+//     弹窗删除错题本
+function  deleteWTB(){
+        const id = document.getElementById("edit-popup").dataset.wtbID;
+        const renameModal = document.getElementById("delete-modal");
+        const title = document.getElementById("edit-popup").dataset.wtbTitle;
+        renameModal.dataset.wtbID=id;
+        document.getElementById("delete-title").innerText = `确认删除 "${title}"？`;
+        document.getElementById("rename-input").innerText='{title}';
+        renameModal.style.display="block";
+    }
+function closeDelete(){
+        document.getElementById("delete-modal").style.display="none";
+    }
+function confirmDelete(){
+        const id = document.getElementById("delete-modal").dataset.wtbID;
+        fetch("/delete_wtb",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({id})
+        }).then(res=>res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();  // 删除成功刷新页面
+                } else {
+                    alert("删除失败：" + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("请求错误:", error);
+                alert("请求失败");
+            })
+        .finally(() => closeDelete())
+        }
+
+</script>

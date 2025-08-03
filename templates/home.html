@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='LoginPage.css') }}" />
+</head>
+<body>
+
+{% set img_path = url_for('static', filename='images') %}
+<div class="LoginBox">
+    <div id="LOGOBox">
+        <img id="LOGO1" src="{{ img_path }}/Icon_LOGO.png" alt="网站LOGO1" />
+        <img id="LOGO2" src="{{ img_path }}/Nighty WTB.png" alt="网站LOGO2" />
+    </div>
+    <div class="loginWND">
+        <h2>登录</h2>
+
+        <form id="loginform" method="POST">
+            <label>用户名：<input type="text" name="username" required></label>
+            <label>密码：<input type="password" name="password" required></label>
+            <div class="checkbox-row">
+                <input type="checkbox" name="remember_me" id="remember_me">
+                <label for="remember_me">记住我</label>
+            </div>
+        </form>
+
+        <div>
+            {% with messages = get_flashed_messages(category_filter=["username_error", "password_error"]) %}
+                {% if messages %}
+                    <ul style="margin-left: 20px;padding: 0;margin-top:0;margin-bottom: 0;">
+                        {% for msg in messages %}
+                            <li style="color:red;">{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="button-wrapper">
+            <div class="button-row">
+                    <button class="btn btn-register" onclick="HomeRegister()">注册</button>
+                    <button class="btn btn-login" onclick="HomeLogin()">登录</button>
+            </div>
+        </div>
+</div>
+</div>
+
+</body>
+</html>
+
+<script>
+function HomeLogin() {
+    document.getElementById('loginform').submit();
+}
+function HomeRegister() {
+    window.location.href = "{{ url_for('auth.register') }}";
+}
+</script>

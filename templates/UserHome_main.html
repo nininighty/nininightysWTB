@@ -1,0 +1,302 @@
+{% set img_path = url_for('static', filename='images') %}
+<div id="main">
+
+    <!-- 标题界面 -->
+    <div class="grid-box" id="inWTB_Title" style="grid-area:inWTB_Title; display: flex; justify-content: space-between; align-items: center;">
+        <p id="text_inWTB_name">错题本名称</p>
+        <button id='icon_inWTB_edit_button' onclick="inWTB_ManageWTB()" class='ClickButton'>
+            <img src="{{ img_path }}/icon_WTB_edit.png" alt="编辑错题本" />
+        </button>
+    </div>
+
+    <!-- 日历组件 -->
+    <div class="grid-box" id="inWTB_Calendar" style="grid-area:inWTB_Calendar">
+      <div class="calendar-header">
+        <button id="icon_inWTB_Calendar_Left" class="ClickButton">
+          <img src="{{ img_path }}/Icon_Calendar_left.png" alt="上个月" />
+        </button>
+        <p id="text_inWTB_Calendartime" class="text_inWTB_MiniTitle">2025年7月</p>
+        <button id="icon_inWTB_Calendar_Right" class="ClickButton">
+          <img src="{{ img_path }}/Icon_Calendar_Right.png" alt="下个月" />
+        </button>
+      </div>
+      <div class="calendar-weekdays">
+        <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
+      </div>
+      <div id="calendar_days" class="calendar-days-grid"></div>
+    </div>
+
+    <!-- 动态数据显示组件 -->
+    <div class="grid-box" id="inWTB_DynamicData" style="grid-area:inWTB_DynamicData">
+        <div id="TotalNumber" class="DynamicComponent">
+            <p id="text_inWTB_DynamicData_TotalNumber" class="DynamicNumber">0</p>
+            <p id="text_inWTB_TotalNumber" class="DynamicText">总题量</p>
+            <button id='icon_inWTB_AddWrongTopic' onclick="addWT_POPWND()" class='ClickButton'>
+                <img src="{{ img_path }}/Icon_add_one_WTB.png" alt="添加错题" />
+            </button>
+        </div>
+        <div id="TodayReview" class="DynamicComponent">
+            <p id="text_inWTB_DynamicData_TodayReview" class="DynamicNumber">0</p>
+            <p id="text_inWTB_TodayReview" class="DynamicText">今日复习</p>
+            <button id='icon_inWTB_DailyReview' onclick="checkWTT()" class='ClickButton'>
+                <img src="{{ img_path }}/icon_daily_WTBpaper.png" alt="每日错题集" />
+            </button>
+        </div>
+
+        <div id="ReviewRate" class="DynamicComponent">
+            <p id="text_inWTB_DynamicData_ReviewRate" class="DynamicNumber">0</p>
+            <p id="text_inWTB_ReviewRate" class="DynamicText">总复习率</p>
+            <button id='icon_inWTB_manageWTB' onclick="loadWTB()" class='ClickButton'>
+                <img src="{{ img_path }}/icon_manage_WTBgroups.png" alt="管理错题" />
+            </button>
+        </div>
+    </div>
+
+    <!-- 轮播备注组件 -->
+    <div class="grid-box" id="inWTB_Remarks" style="grid-area:inWTB_Remarks">
+        <div class="RemarkHeader">
+            <p id="text_inWTB_Remarks" class="text_inWTB_MiniTitle">我的备注</p>
+            <button id='icon_inWTB_RefreshRemarks' onclick="" class='ClickButton'>
+                <img src="{{ img_path }}/icon_refresh.png" alt="刷新备注" />
+            </button>
+        </div>
+    </div>
+
+    <!-- 章节进度 -->
+    <div class="grid-box" id="inWTB_Chapters" style="grid-area:inWTB_Chapters">
+        <div id="ChapterHeader">
+            <p id="text_inWTB_Chapters" class="text_inWTB_MiniTitle">学习情况</p>
+            <button id='icon_inWTB_ManageChapters' onclick="addChapter()" class='ClickButton'>
+                <img src="{{ img_path }}/icon_Chapter_edit.png" alt="管理章节" />
+            </button>
+        </div>
+        <div id="ChapterChartsContainer">
+            <div id="ChapterDynamicCharts"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// 添加错题
+function addWT_POPWND(){
+  // 清空图片预览区
+  const questionPreview = document.querySelector("#question-uploader .image-preview");
+  const questionPlaceholder = document.querySelector("#question-uploader .placeholder");
+  questionPreview.innerHTML = '';
+  questionPlaceholder.style.display = 'block';
+
+  const answerPreview = document.querySelector("#answer-uploader .image-preview");
+  const answerPlaceholder = document.querySelector("#answer-uploader .placeholder");
+  answerPreview.innerHTML = '';
+  answerPlaceholder.style.display = 'block';
+
+  // 清空名称输入
+  const input = document.getElementById("text_PopWND_AddWT_name");
+  input.dataset.userTyped = "false";
+  input.value = "";
+  const confirmBtn = document.getElementById("btn_confirm_addWT");
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = "确认添加";
+  updateAutoName();
+  renderTagCheckboxes("tagCheckboxContainer");
+  updateChapterDropdown(currentWTBId,'select_PopWND_AddWT_Chapter');
+
+  document.getElementById("inWTB_AddWrongTopic-modal").style.display = "block";
+}
+
+//  读取错题界面
+function loadWTB() {
+    if (!currentWTBId) {
+        alert("未选择错题本");
+        return;
+    }
+  window.open(`/wrong_topic_detail_page?wtb_id=${currentWTBId}`, '_blank');
+}
+
+
+// 计算窗口尺寸
+function getVisibleChapterCountByHeight() {
+  const containerHeight = document.getElementById("inWTB_Chapters").clientHeight;
+  const blockHeight = 50; // 单个章节柱状图高度
+  return Math.floor(containerHeight / blockHeight);
+}
+// 绘制图表
+function renderDynamicCharts(chapterStats) {
+    let SortWay=1;
+  const container = document.getElementById("ChapterDynamicCharts");
+  container.innerHTML = "";
+
+  if (!chapterStats || chapterStats.length === 0) return;
+
+  // 按正确率从小到大排序
+    if(SortWay===1){
+        chapterStats.sort((a, b) => b.question_count - a.question_count);
+    }else{
+          chapterStats.sort((a, b) => (a.avg_accuracy || 0) - (b.avg_accuracy || 0));
+    }
+
+
+  const maxCount = Math.max(...chapterStats.map(c => c.question_count));
+
+  chapterStats.forEach(chap => {
+    const row = document.createElement("div");
+    row.className = "chapter-row";
+
+    const barContainer = document.createElement("div");
+    barContainer.className = "bar-container";
+    barContainer.style.position = 'relative';
+
+    const grayBar = document.createElement("div");
+    grayBar.className = "gray-bar";
+
+    const greenBar = document.createElement("div");
+    greenBar.className = "green-bar";
+
+    barContainer.appendChild(grayBar);
+    barContainer.appendChild(greenBar);
+    const accuracy = (chap.avg_accuracy ?? 0);
+    const accuracyText = (accuracy * 100).toFixed(1) + "%";
+
+    const textDiv = document.createElement("div");
+    textDiv.className = "chapter-text";
+    textDiv.textContent = `${chap.chapter_name || "未命名章节"}（${chap.question_count}题 | 正确率 ${accuracyText}）`;
+
+    row.appendChild(barContainer);
+    row.appendChild(textDiv);
+    container.appendChild(row);
+
+    const grayWidthPercent = (chap.question_count / maxCount) * 90;
+    const greenWidthPercent = grayWidthPercent * (chap.avg_accuracy || 0);
+
+    requestAnimationFrame(() => {
+      grayBar.style.width = grayWidthPercent + "%";
+      greenBar.style.width = greenWidthPercent + "%";
+    });
+  });
+}
+
+
+
+// 添加章节窗口调出
+function addChapter(){
+    const modal = document.getElementById("inWTB_ManageChapters-modal");
+    const list = document.getElementById("ChapterList");
+    modal.style.display = "block";
+    list.innerHTML = `<p id="empty-chapter-msg" style="text-align:center;color:gray;">加载中...</p>`;
+    fetch(`/get_chapter_list?wtb_id=${currentWTBId}`)
+        .then(res => res.json())
+        .then(data => {
+          list.innerHTML = "";
+          if (!data || data.length === 0) {
+            list.innerHTML = `<p id="empty-chapter-msg" style="text-align:center;color:gray;">暂无章节</p>`;
+          } else {
+            data.forEach(ch => {
+                const item = document.createElement("div");
+                item.className = "chapter-item";
+                item.dataset.chapterId = ch.id; // 赋数据库id
+                item.dataset.status = "old";    // 标记已有章节
+                item.innerHTML = `
+                  <span>${ch.name}</span>
+                  <button onclick="renameChapter_Local(this)">重命名</button>
+                  <button onclick="deleteChapter_Local(this)">删除</button>
+                `;
+              list.appendChild(item);
+            });
+          }
+        })
+        .catch(err => {
+          list.innerHTML = `<p style="color:red;text-align:center;">加载失败</p>`;
+          console.error("获取章节失败：", err);
+        });
+}
+
+// 编辑错题本窗口弹出
+function inWTB_ManageWTB(){
+  const modal = document.getElementById("inWTB_ManageWTB-modal");
+  const list = document.getElementById("WTBLabelList");
+  const themeColorInput = document.getElementById("ManageWTB_themeColor");
+  const dailyNumInput = document.getElementById("ManageWTB_PaperNum_InputNum");
+
+  modal.style.display = "block";
+  list.innerHTML = `<p style="text-align:center;color:gray;">加载中...</p>`;
+
+  // 先加载标签
+  fetch(`/get_Label_list?wtb_id=${currentWTBId}`)
+    .then(res => res.json())
+    .then(data => {
+      list.innerHTML = "";
+      if (!data || !data.success) {
+        list.innerHTML = `<p style="text-align:center;color:gray;">加载标签失败</p>`;
+        return;
+      }
+
+      if (!Array.isArray(data.labels) || data.labels.length === 0) {
+        list.innerHTML = `<p style="text-align:center;color:gray;">暂无标签</p>`;
+      } else {
+        data.labels.forEach(label => {
+          const item = document.createElement("div");
+          item.className = "label_item";
+          item.dataset.labelId = label.id;
+          item.dataset.status = "old";
+
+          item.innerHTML = `
+            <span>${label.tag_name}</span>
+            <div>标签色： <input type="color" class="label-color" value="${label.color}" style="margin-left: 10px;"></div>
+            <div style="margin-left:10px;">权重：<input type="number" class="label-weight" min="0" max="1" step="0.1" value="${label.weight}" style="width:60px; margin-left:10px;"></div>
+            <button onclick="renameLabel_Local(this)">重命名</button>
+            <button onclick="deleteLabel_Local(this)">删除</button>
+          `;
+
+          bindLabelChangeListener(item);
+          list.appendChild(item);
+        });
+      }
+    })
+    .catch(() => {
+      list.innerHTML = `<p style="text-align:center;color:gray;">加载标签失败</p>`;
+    });
+
+  // 再单独加载主题色和每日题量
+  fetch(`/get_WTB_detail?wtb_id=${currentWTBId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        if (data.theme_color) themeColorInput.value = data.theme_color;
+        if (typeof data.daily_topic_num === "number") dailyNumInput.value = data.daily_topic_num;
+      }
+    });
+}
+
+
+// 渲染主页
+function renderMainPage(wtbId) {
+    const chapters_MaxToShow = getVisibleChapterCountByHeight();
+
+    // 请求错题本内容
+    fetch(`/get_wtb_content?wtb_id=${wtbId}&show_top_n=${chapters_MaxToShow}`)
+        .then(response => {
+            if (!response.ok) throw new Error("网络错误");
+            return response.json();
+        })
+        .then(data => {
+            console.log(data)
+
+            // 渲染错题本的基本数据
+            document.getElementById("text_inWTB_name").innerText = data.title;
+            currentWTBName = data.title;
+            document.getElementById("text_inWTB_DynamicData_TotalNumber").innerText = data.total_questions;
+            document.getElementById("text_inWTB_DynamicData_TodayReview").innerText = data.today_finished;
+            document.getElementById("text_inWTB_DynamicData_ReviewRate").innerText = `${Math.round(data.review_rate * 100)}%`;
+
+            // 渲染日历数据
+            const now = new Date();
+            updateCalendar(now);
+            renderDynamicCharts(data.chapter_stats);
+        })
+        .catch(err => {
+            console.error("加载错题本内容失败：", err);
+        });
+}
+
+</script>

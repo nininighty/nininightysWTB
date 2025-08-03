@@ -1,0 +1,93 @@
+/*网页背景*/
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-image: url('/static/images/BackGround_HomePage2.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.LoginBox,
+.RegisterBox{
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
+
+/*登录界面*/
+.loginWND,
+.registerWND{
+    background: rgba(255, 255, 255, 0.7);
+    color: #000000;
+    margin:0;
+    padding: 20px;
+    width: 300px;
+    border-radius: 15px;
+}
+.loginWND form{
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
+.registerWND form{
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.loginWND label{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.loginWND input[type="text"],
+.loginWND input[type="password"]{
+    flex:1;
+    margin-left: 10px;
+    max-width:180px;
+}
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 5px 0;
+}
+/* 按钮行 */
+.button-wrapper {
+  margin: 0;
+  padding-top: 20px;
+}
+  .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+  }
+  .button-row button {
+    padding: 8px 22px;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-register {
+    background-color: #ccc;
+    color: #333;
+  }
+  .btn-register:hover {
+    background-color: #999;
+  }
+  .btn-login {
+    background-color: #009751;
+    color: #fff;
+  }
+  .btn-login:hover {
+    background-color: #0b6d3d;
+  }
