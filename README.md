@@ -22,7 +22,7 @@
 
 ## 服务器所需第三方软件
 - MySQL：/SetUp中已经准备好了建库脚本
-- 
+- Nginx
 
 ## 目录结构
 - `/static` —css源码，以及网站图片字体资源
@@ -41,12 +41,27 @@
 
 - MySQL 8.0.x  
   - 需要安装并启动 MySQL 服务  
-  - 创建项目数据库及用户，执行 `SetUp/user_system_schema.sql` 脚本初始化数据库结构
+  - 用 root 登录 MySQL，创建数据库和专用用户：
+    ```sql
+    CREATE DATABASE WTB_SQL DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER '数据库用户名'@'localhost' IDENTIFIED BY '数据库用户的密码';
+    GRANT ALL PRIVILEGES ON WTB_SQL.* TO 'wtb_user'@'localhost';
+    FLUSH PRIVILEGES;
+    EXIT;
+    ```
+    使用新建的用户（以wtb_user为例）用户导入初始化脚本：
+     ```bash
+    mysql -u wtb_user -p WTB_SQL < SetUp/user_system_schema.sql
+    ```
 
 - Python 3.9+  
   - 推荐使用虚拟环境  
   - 安装依赖：`pip install -r requirements.txt`
 
+- Gunicorn
+  ```bash
+  pip install gunicorn
+  ```
 - libpango -1.0-9
   - 请在配置虚拟环境完成后安装libpango，该插件负责渲染错题卷的pdf文件，安装代码如下：
   ```bash
@@ -68,16 +83,17 @@ curl http://127.0.0.1:8000/
 测试完成后关闭Gunicorn进程
 ```bash
 ps aux | grep gunicorn
-kill -9 <gunicorn主进程PID>
+pkill -f gunicorn
 ```
 ### ③修改本地配置文件  
-请先在您的服务器上建立一个备份的文件夹，然后返回项目目录填写配置
+请先在您的服务器上建立一个备份的文件夹，然后返回项目目录填写配置  
+创建.env环境配置的文件
 ```bash
-vim .env.example
+cp .env.example .env
 ```
-完成配置后修改文件名
+查询Nginx的目录可用
 ```bash
-cp .env.example 可选文件名称.env
+ls -ld /etc/nginx/conf.d
 ```
 
 ### ④进入SetUp文件夹，执行部署脚本
