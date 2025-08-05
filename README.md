@@ -47,6 +47,49 @@
   - 推荐使用虚拟环境  
   - 安装依赖：`pip install -r requirements.txt`
 
+- libpango -1.0-9
+  - 请在配置虚拟环境完成后安装libpango，该插件负责渲染错题卷的pdf文件，安装代码如下：
+  ```bash
+     sudo yum install -y pango pango-devel cairo cairo-devel gdk-pixbuf2 gdk-pixbuf2-devel libffi-devel
+     ```
+
+## ECS部署步骤
+### ①激活虚拟环境
+```bash
+cd ~/你的项目目录
+source venv311/bin/activate
+```
+
+### ②后台启动Gunicorn并测试本机服务
+```bash
+gunicorn -w 4 -b 127.0.0.1:8000 SetUp.wsgi:app --daemon
+curl http://127.0.0.1:8000/
+```
+测试完成后关闭Gunicorn进程
+```bash
+ps aux | grep gunicorn
+kill -9 <gunicorn主进程PID>
+```
+### ③修改本地配置文件  
+请先在您的服务器上建立一个备份的文件夹，然后返回项目目录填写配置
+```bash
+vim .env.example
+```
+完成配置后修改文件名
+```bash
+cp .env.example 可选文件名称.env
+```
+
+### ④进入SetUp文件夹，执行部署脚本
+完成Nginx的部署，成功时显示：  
+"【成功】nginx 配置生成并已重启，代理目标：..."
+```bash
+bash gen_nginx_conf.sh
+```
+完成systemd的部署
+```bash
+bash gen_systemd.sh
+```
 
 ## 定时任务脚本配置（统计用户得分和生成错题卷）
 ### Linux

@@ -25,7 +25,7 @@ Type=simple
 User=$USER_NAME
 WorkingDirectory=$PROJECT_PATH
 
-ExecStart=/bin/bash $PROJECT_PATH/SetUp/start.sh
+ExecStart=/bin/bash $PROJECT_PATH/SetUp/start_gunicorn.sh
 
 Restart=always
 RestartSec=5s
