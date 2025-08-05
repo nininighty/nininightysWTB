@@ -4,7 +4,7 @@ echo "当前路径：$(pwd)"
 echo "VENV_PATH=$VENV_PATH"
 
 # 读取根目录的 .env 文件中的 VENV_PATH
-VENV_PATH=$(grep -v '^#' ../.env | grep VENV_PATH | cut -d '=' -f2)
+VENV_PATH=$(grep -v '^#' "$PWD/.env" | grep VENV_PATH | cut -d '=' -f2)
 
 if [ -z "$VENV_PATH" ]; then
   echo "Error: VENV_PATH not set in ../.env"
