@@ -37,17 +37,15 @@
 - 其余各文件用途请参看文件首部，因为这是我的首个项目所以文件排布混乱敬请谅解 :(
 
 
-## 环境准备
-1. 创建并激活虚拟环境  
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/macOS
-   .venv\Scripts\activate     # Windows
+## 环境要求
 
-查看 nginx 主配置文件位置  
-```bash
-nginx -V 2>&1 | grep -- '--conf-path'
-```
+- MySQL 8.0.x  
+  - 需要安装并启动 MySQL 服务  
+  - 创建项目数据库及用户，执行 `SetUp/user_system_schema.sql` 脚本初始化数据库结构
+
+- Python 3.9+  
+  - 推荐使用虚拟环境  
+  - 安装依赖：`pip install -r requirements.txt`
 
 
 ## 定时任务脚本配置（统计用户得分和生成错题卷）
@@ -67,4 +65,4 @@ nginx -V 2>&1 | grep -- '--conf-path'
    ```
 
 ## 可能的问题
-ECSpython版本过低导致requirements安装失败
+ECS上python版本过低导致requirements安装失败，建议至少python3.9以上
