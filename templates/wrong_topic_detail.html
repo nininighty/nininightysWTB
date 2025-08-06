@@ -418,7 +418,7 @@ function renderDetailTags(selectedTags, wtbId) {
 function setImageOrUpload(containerId, imageURL) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
-
+  console.log("imageURL",imageURL)
   // 判断路径是否包含 "Official"
   const isOfficial = imageURL && imageURL.includes("Official");
 
