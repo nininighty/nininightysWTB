@@ -410,4 +410,5 @@ def deleteWrongTopic():
 # 本地调试
 @user_bp.route('/img/<path:filename>')
 def uploaded_file(filename):
+    print("Request for :",filename)
     return send_from_directory(os.path.join(config.LOCAL_PATH, 'WTBs'), filename)
