@@ -3,8 +3,9 @@
 echo "当前路径：$(pwd)"
 echo "VENV_PATH=$VENV_PATH"
 
-# 读取根目录的 .env 文件中的 VENV_PATH
-VENV_PATH=$(grep -v '^#' "$PWD/.env" | grep VENV_PATH | cut -d '=' -f2)
+# 读取根目录的 .env 文件中的 VENV_PATH，记得更改ENV_FILE的路径为你的ECS上的.env代码路径
+ENV_FILE="/opt/wtb_project/.env"
+VENV_PATH=$(grep -v '^#' "$ENV_FILE" | grep '^VENV_PATH=' | cut -d '=' -f2- | xargs)
 
 if [ -z "$VENV_PATH" ]; then
   echo "Error: VENV_PATH not set in ../.env"
