@@ -11,9 +11,9 @@ MEMORY_FACTOR = config.MemoryFactor
 def db_cursor():
     conn = pymysql.connect(
         host="localhost",
-        user="root",
-        password=config.MySQL_PSW,
-        database="user_system",
+        user=config.MYSQL_USER,
+        password=config.MYSQL_PSW,
+        database="WTB_SQL",
         cursorclass=pymysql.cursors.DictCursor,
         charset='utf8mb4'
     )
