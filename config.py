@@ -12,4 +12,4 @@ IMAGE_BASE_URL = os.getenv("IMAGE_BASE_URL", "http://127.0.0.1:5000/img/")
 LOCAL_PATH = os.getenv("LOCAL_PATH")
 OFFICIAL_PATH = os.getenv("OFFICIAL_PATH")
 
-MemoryFactor = os.getenv("MemoryFactor")
+MemoryFactor = float(os.getenv("MemoryFactor"))
