@@ -36,7 +36,7 @@
 
 /* 错题按钮样式，去除默认边框，添加悬浮提示 */
 .topic-item-btn {
-    border: 1px solid rgba(255, 255, 255, 0);
+    border: 1px solid #5c5883;
     border-radius: 2px;
     background: none;
     padding: 4px 8px;
