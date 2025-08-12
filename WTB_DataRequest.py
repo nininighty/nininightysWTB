@@ -9,6 +9,7 @@ import json
 from io import BytesIO
 from PIL import Image
 import io
+from natsort import natsorted
 
 WTB_DataRequest = Blueprint('wtb', __name__)
 WTBs_path = "./WTBs"
@@ -863,7 +864,7 @@ def get_wrong_topics():
                     "explanation_url": row['explanation_url'],
                     "created_at": row['created_at'].strftime('%Y-%m-%d %H:%M:%S') if row['created_at'] else None,
                 })
-
+            result = natsorted(result, key=lambda x: x['title'])
             return jsonify({"success": True, "data": result})
 
     except Exception as e:
