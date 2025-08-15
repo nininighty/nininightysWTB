@@ -76,8 +76,8 @@ function getColorByReviewCount(count) {
   if (count <= 0) return '#d2d2d2';
   if (count >= 20) return '#00A573';
 
-  const startColor = hexToRgb('#91cfbc');
-  const endColor = hexToRgb('#007a52');
+  const startColor = hexToRgb('#d2d2d2');
+  const endColor = hexToRgb('#00A573');
 
   // 线性映射count到0~1，count=1~20
   const factor = (count - 1) / (20 - 1);
