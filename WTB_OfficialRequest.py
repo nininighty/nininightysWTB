@@ -136,7 +136,6 @@ def import_official_topic():
             if not user:
                 return jsonify({"success": False, "message": "用户不存在"})
             user_id = user["id"]
-            print(data)
             # 章节处理
             unit_id = None
             print("ChapterName", chapter_name)

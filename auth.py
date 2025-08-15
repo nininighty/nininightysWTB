@@ -45,7 +45,7 @@ def home():
                         session.permanent = True
                     else:
                         session.permanent = False
-
+                    print("【用户登录】：" , username)
                     return redirect(url_for("user.user_home"))
                 else:
                     flash("密码错误", "password_error")
