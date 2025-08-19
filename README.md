@@ -67,8 +67,19 @@
   ```bash
      sudo yum install -y pango pango-devel cairo cairo-devel gdk-pixbuf2 gdk-pixbuf2-devel libffi-devel
      ```
+  - Windows环境下可以访问以下网址安装GTK环境：
+  ```
+  https://github.com/tschoonj/gtk-for-windows-runtime-environment-installer/releases?utm_source=chatgpt.com
+  ```
 
-## ECS部署步骤
+## Windows ECS部署步骤
+①安装环境：python、Nginx、MySQL以及GTK  
+②在目标文件夹下创建虚拟环境并安装需要的包  
+③配置Nginx的conf文件  
+④创建一份bat文件用于切换到对应虚拟环境并运行`run_waitress.py`，之后启动服务器只需要执行bat文件即可
+
+## Linux ECS部署步骤
+作者在Linux上部署遇到了诸多问题，作为一个代码新手来说我不推荐linux，同时以下的部署步骤可能会出现问题，很抱歉本项目暂时无法提供解答
 ### ①激活虚拟环境
 ```bash
 cd ~/你的项目目录
@@ -122,6 +133,8 @@ bash gen_systemd.sh
 ```bash
  0 0 * * * /bin/bash /home/your_user/wtb/SetUp/run_generate_papers.sh >> /home/your_user/wtb/logs/generate_papers.log 2>&1
    ```
+### Windows
+打开“任务计划程序”，运行bat脚本。bat脚本的内容为执行对应的py文件，记得切换到对应的虚拟环境
 
 ## 可能的问题
 ECS上python版本过低导致requirements安装失败，建议至少python3.9以上

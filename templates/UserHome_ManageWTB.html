@@ -48,7 +48,7 @@ function ManageWTB_AddLabel(){
         containerSelector: "#WTBLabelList",
         itemClass: "label_item"
         });
-    const emptyMsg = document.getElementById("empty-chapter-msg");
+    const emptyMsg = chapterList.querySelector(".empty-msg");
     if (emptyMsg) emptyMsg.remove();
 
     const item = document.createElement("div");

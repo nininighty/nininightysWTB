@@ -232,7 +232,7 @@ function inWTB_ManageWTB(){
       }
 
       if (!Array.isArray(data.labels) || data.labels.length === 0) {
-        list.innerHTML = `<p style="text-align:center;color:gray;">暂无标签</p>`;
+        list.innerHTML = `<p class="empty-msg" style="text-align:center;color:gray;">暂无标签</p>`;
       } else {
         data.labels.forEach(label => {
           const item = document.createElement("div");

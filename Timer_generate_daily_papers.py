@@ -24,6 +24,10 @@ def generate_wrong_topic_paper_for_user(user_id, wtb_id, chapter_id=None):
                 print(f"用户 {user_id} 错题本 {wtb_id} 无错题，跳过")
                 return False
 
+            if topic_num == 0:
+                print(f"用户 {user_id} 错题本 {wtb_id} 不生成错卷，跳过")
+                return False
+
             topic_num = min(max(topic_num, 1), len(wrong_topics))
             selected_topics = []
             pool = wrong_topics[:]
