@@ -221,6 +221,43 @@ def get_monthly_review_stats():
         return jsonify({"success": True, "data": data})
 
 
+# 随机获取备注文本
+@WTB_DataRequest.route("/get_random_note_with_topic", methods=['GET'])
+def get_random_note_with_topic():
+    if 'username' not in session:
+        return jsonify({"success": False, "message": "未登录"}), 401
+
+    username = session['username']
+    wtb_id = request.args.get('wtb_id', type=int)
+    if not wtb_id:
+        return jsonify({"success": False, "message": "参数缺失"}), 400
+
+    with db_cursor() as (conn, cursor):
+        cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"success": False, "message": "用户不存在"}), 404
+        user_id = user['id']
+
+        # 随机获取一条对应 wtb_id 的备注，并关联 wrong_topic 获取题目标题
+        cursor.execute("""
+            SELECT wn.note_text, wt.title AS topic_title
+            FROM wtb_notes wn
+            LEFT JOIN wrong_topic wt ON wn.wrong_topic_id = wt.id
+            WHERE wn.wtb_id = %s
+            ORDER BY RAND()
+            LIMIT 1
+        """, (wtb_id,))
+        row = cursor.fetchone()
+
+        if row:
+            note_text = row["note_text"]
+            topic_title = row["topic_title"] if row["topic_title"] else "未知题目"
+            return jsonify({"success": True, "note_text": note_text, "topic_title": topic_title})
+        else:
+            return jsonify({"success": True, "note_text": "暂无备注", "topic_title": ""})
+
+
 # ========================   管理错题本   ==========================================
 # 修改wtb情况
 @WTB_DataRequest.route('/submit_WTBEdit', methods=['POST'])

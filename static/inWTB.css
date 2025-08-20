@@ -16,6 +16,30 @@
     padding: 0 40px;
 }
 
+/*备注文字*/
+#inWTB_Remarks {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.RemarkCenterText {
+    color: #000000;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+/* 题目部分单独样式 */
+.RemarkCenterText .RemarkTopic {
+    align-self: flex-end;
+    font-style: italic;
+    font-size: 0.9em;
+    color: #4f5c53;
+}
+
 .DynamicComponent{
     text-align: center;
 }

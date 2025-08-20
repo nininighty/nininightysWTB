@@ -344,7 +344,7 @@ def wrong_topic_paper_pdf():
                                wtb_id=wtb_id_for_template)
 
     pdf_io = io.BytesIO()
-    HTML(string=html_str).write_pdf(target=pdf_io)
+    HTML(string=html_str, base_url=request.host_url).write_pdf(target=pdf_io)
 
     pdf_data = pdf_io.getvalue()
 
