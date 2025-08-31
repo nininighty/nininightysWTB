@@ -240,7 +240,7 @@ html, body {
 
 .note-bubble .note-delete {
   position: absolute;
-  top: 4px;
+  bottom: 4px;
   right: 8px;
   background: none;
   border: none;
