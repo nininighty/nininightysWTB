@@ -74,13 +74,13 @@ function loadCalendarData(dateObj) {
 
 function getColorByReviewCount(count) {
   if (count <= 0) return '#ffffff';
-  if (count >= 10) return '#00A573';
+  if (count >= 15) return '#00A573';
 
   const startColor = hexToRgb('#ffffff');
   const endColor = hexToRgb('#00A573');
 
   // 线性映射count到0~1，count=1~20
-  const factor = (count - 1) / (20 - 1);
+  const factor = (count - 1) / (15 - 1);
 
   const interpColor = interpolateColor(startColor, endColor, factor);
   return rgbToHex(interpColor.r, interpColor.g, interpColor.b);
