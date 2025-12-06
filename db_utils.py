@@ -66,7 +66,7 @@ def select_weighted_wrong_topics(user_id, wtb_id, chapter_id=None):
             correct_weight = 2 - 1.2 * correct_rate
             is_reviewed = row['is_reviewed']
             tag_weight = 1 + (row['weight'] / (1 + abs(row['weight'])))
-            total_weight = memory_weight * tag_weight * correct_weight * (1.5 - 0.75*row['init_score']) * (2 - is_reviewed)
+            total_weight = memory_weight * tag_weight * pow(correct_weight,2) * (1.5 - 0.75*row['init_score']) * (2 - is_reviewed)
             result.append({
                 "id": row['id'],
                 "weight": total_weight,
